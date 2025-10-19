@@ -60,9 +60,9 @@ if (isset($_POST['tambahDataSiswa'])) {
 
     if ($query) {
         // session login untuk siswa
-        $_SESSION['nisnSiswa'] = $nisn;
-        $_SESSION['namaSiswa'] = $nama_lengkap;
-        $_SESSION['tlSiswa'] = $tanggal_lahir;
+        $_SESSION['nisnPeserta'] = $nisn;       
+        $_SESSION['namaPeserta'] = $nama_lengkap;
+        $_SESSION['tlPeserta'] = $tanggal_lahir;
         $_SESSION['status_pembayaran'] = 'Belum Lunas';
 
         $_SESSION['alert'] = '<div class="alert alert-success alert-has-icon" id="alert">
@@ -100,9 +100,9 @@ if (isset($_POST['loginSiswa'])) {
 
     if (mysqli_num_rows($query) > 0) {
         foreach ($query as $row) {
-            $_SESSION['nisnSiswa'] = $nisn;
-            $_SESSION['namaSiswa'] = $row['Nama_Peserta_Didik'];
-            $_SESSION['tlSiswa'] = $tanggal_lahir;
+            $_SESSION['nisnPeserta'] = $nisn;        
+            $_SESSION['namaPeserta'] = $row['Nama_Peserta_Didik']; 
+            $_SESSION['tlPeserta'] = $tanggal_lahir;
             $_SESSION['status_pembayaran'] = ($row['status_administrasi'] == 1) ? 'Lunas' : 'Belum Lunas';
 
             header('Location: ../../view/halaman/daftarSiswa.php');
@@ -124,7 +124,6 @@ if (isset($_POST['loginSiswa'])) {
 
 // Logout Siswa
 if (isset($_GET['logout'])) {
-    unset($_SESSION['nisnSiswa'], $_SESSION['namaSiswa'], $_SESSION['tlSiswa'], $_SESSION['status_pembayaran']);
-    header('Location: ../../view/siswa/');
+    unset($_SESSION['nisnPeserta'], $_SESSION['namaPeserta'], $_SESSION['tlPeserta'], $_SESSION['status_pembayaran']);
 }
 ?>
