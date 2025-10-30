@@ -16,7 +16,7 @@
 															username = '$username',
 															password = '$password',
 															hak = '$hak',
-											z				status = '$status',
+															status = '$status',
 															tgl_buat = '$tgl_buat' ");
 
 		if($query) {
