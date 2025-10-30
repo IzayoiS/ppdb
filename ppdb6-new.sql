@@ -182,7 +182,7 @@ CREATE TABLE `setting_kuota` (
   `tahun_ajaran` varchar(9) DEFAULT '2024/2025',
   `tgl_buat` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `setting_kuota` (`id`, `jurusan`, `kuota_total`, `kuota_terisi`, `tahun_ajaran`, `tgl_buat`) VALUES
 (1,	'TKJT',	30,	0,	'2024/2025',	'2025-10-26 07:32:11'),
