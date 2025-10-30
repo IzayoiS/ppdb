@@ -5,42 +5,6 @@ SET time_zone = '+00:00';
 SET foreign_key_checks = 0;
 SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 
-DROP TABLE IF EXISTS `administrasi`;
-CREATE TABLE `administrasi` (
-  `id_administrasi` int NOT NULL AUTO_INCREMENT,
-  `id_identitas_siswa` int NOT NULL,
-  `harga` int NOT NULL,
-  `status` enum('Lunas','Belum Lunas') NOT NULL,
-  `tgl_buat` datetime NOT NULL,
-  `tgl_ubah` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_administrasi`),
-  KEY `id_identitas_siswa` (`id_identitas_siswa`),
-  CONSTRAINT `administrasi_ibfk_1` FOREIGN KEY (`id_identitas_siswa`) REFERENCES `identitas_siswa` (`Id_Identitas_Siswa`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
-INSERT INTO `administrasi` (`id_administrasi`, `id_identitas_siswa`, `harga`, `status`, `tgl_buat`, `tgl_ubah`) VALUES
-(5,	1,	1250000,	'Lunas',	'2020-09-17 09:48:12',	'2020-09-17 08:22:50'),
-(6,	31,	100000,	'Lunas',	'2025-10-26 04:34:39',	'2025-10-26 04:34:39'),
-(7,	33,	100000,	'Lunas',	'2025-10-26 06:49:23',	'2025-10-26 06:49:23'),
-(8,	34,	100000,	'Lunas',	'2025-10-26 09:51:48',	'2025-10-26 09:51:48'),
-(9,	36,	100000,	'Lunas',	'2025-10-26 14:12:19',	'2025-10-26 14:12:19'),
-(10,	35,	100000,	'Lunas',	'2025-10-26 14:24:03',	'2025-10-26 14:24:03');
-
-DELIMITER ;;
-
-CREATE TRIGGER `TambahAdministrasi` AFTER INSERT ON `administrasi` FOR EACH ROW
-BEGIN
-  UPDATE identitas_siswa SET status_administrasi = 1 
-  WHERE Id_Identitas_Siswa = NEW.id_identitas_siswa;
-END;;
-
-CREATE TRIGGER `HapusAdministrasi` AFTER DELETE ON `administrasi` FOR EACH ROW
-BEGIN
-  UPDATE identitas_siswa SET status_administrasi = 0 
-  WHERE Id_Identitas_Siswa = OLD.id_identitas_siswa; 
-END;;
-
-DELIMITER ;
 
 DROP TABLE IF EXISTS `identitas_siswa`;
 CREATE TABLE `identitas_siswa` (
@@ -114,6 +78,44 @@ INSERT INTO `identitas_siswa` (`Id_Identitas_Siswa`, `NISN`, `No_KK`, `NIK`, `Na
 (34,	'7457834672',	NULL,	'2938012839189948',	NULL,	'user7',	'08242942343',	NULL,	'1111-02-02',	'binar',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	0,	1,	NULL,	'Menunggu Verifikasi',	'2025-10-26 09:37:09',	'2025-10-26 09:51:48',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL),
 (35,	'8742347832',	'2389123789127389',	'2347892374892748',	'doni',	'doni',	'098342374234',	'depok',	'2220-02-02',	'-',	'Laki-Laki',	'Islam',	'A',	'160',	'60',	'-',	'-',	'-',	'-',	2,	5,	'Wali',	'dfdadwq',	'-',	'-',	'-',	'-',	'16435',	'1',	'-',	0,	1,	'TKJT',	'Menunggu Verifikasi',	'2025-10-26 14:10:56',	'2025-10-26 07:45:19',	NULL,	'-',	NULL,	'doni@gmail.com',	'-',	NULL,	'-',	'ayah doni',	'-',	'-',	'-',	'Orang Tua',	'Mobil'),
 (36,	'8375834523',	'',	'5834906738975238',	NULL,	'dani',	'0823423423',	NULL,	'2222-02-02',	'binar',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	1,	1,	NULL,	'Menunggu Verifikasi',	'2025-10-26 14:11:42',	'2025-10-26 16:21:49',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL);
+
+
+DROP TABLE IF EXISTS `administrasi`;
+CREATE TABLE `administrasi` (
+  `id_administrasi` int NOT NULL AUTO_INCREMENT,
+  `id_identitas_siswa` int NOT NULL,
+  `harga` int NOT NULL,
+  `status` enum('Lunas','Belum Lunas') NOT NULL,
+  `tgl_buat` datetime NOT NULL,
+  `tgl_ubah` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_administrasi`),
+  KEY `id_identitas_siswa` (`id_identitas_siswa`),
+  CONSTRAINT `administrasi_ibfk_1` FOREIGN KEY (`id_identitas_siswa`) REFERENCES `identitas_siswa` (`Id_Identitas_Siswa`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+INSERT INTO `administrasi` (`id_administrasi`, `id_identitas_siswa`, `harga`, `status`, `tgl_buat`, `tgl_ubah`) VALUES
+(5,	1,	1250000,	'Lunas',	'2020-09-17 09:48:12',	'2020-09-17 08:22:50'),
+(6,	31,	100000,	'Lunas',	'2025-10-26 04:34:39',	'2025-10-26 04:34:39'),
+(7,	33,	100000,	'Lunas',	'2025-10-26 06:49:23',	'2025-10-26 06:49:23'),
+(8,	34,	100000,	'Lunas',	'2025-10-26 09:51:48',	'2025-10-26 09:51:48'),
+(9,	36,	100000,	'Lunas',	'2025-10-26 14:12:19',	'2025-10-26 14:12:19'),
+(10,	35,	100000,	'Lunas',	'2025-10-26 14:24:03',	'2025-10-26 14:24:03');
+
+DELIMITER ;;
+
+CREATE TRIGGER `TambahAdministrasi` AFTER INSERT ON `administrasi` FOR EACH ROW
+BEGIN
+  UPDATE identitas_siswa SET status_administrasi = 1 
+  WHERE Id_Identitas_Siswa = NEW.id_identitas_siswa;
+END;;
+
+CREATE TRIGGER `HapusAdministrasi` AFTER DELETE ON `administrasi` FOR EACH ROW
+BEGIN
+  UPDATE identitas_siswa SET status_administrasi = 0 
+  WHERE Id_Identitas_Siswa = OLD.id_identitas_siswa; 
+END;;
+
+DELIMITER ;
 
 DROP TABLE IF EXISTS `orang_tua_wali`;
 CREATE TABLE `orang_tua_wali` (
