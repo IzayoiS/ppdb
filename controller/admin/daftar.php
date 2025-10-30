@@ -1,75 +1,41 @@
 <?php 
 	
-	session_start();
+	if (session_status() === PHP_SESSION_NONE) {
+		session_start();
+	}
 	include("../../config/connection.php");
 
 	// Tambah Data
 	if (isset($_POST['tambahDataSiswa'])) {
-		$nisn 				= mysqli_real_escape_string($conn, $_POST['nisn']); 
-		$no_kk 				= mysqli_real_escape_string($conn, $_POST['no_kk']); 
-		$nik 				= mysqli_real_escape_string($conn, $_POST['nik']); 
-		$nama_panggilan		= mysqli_real_escape_string($conn, $_POST['nama_panggilan']); 
-		$nama_lengkap		= mysqli_real_escape_string($conn, $_POST['nama_lengkap']); 
-		$tempat_lahir		= mysqli_real_escape_string($conn, $_POST['tempat_lahir']); 
-		$tanggal_lahir		= mysqli_real_escape_string($conn, $_POST['tanggal_lahir']); 
-		$jenis_kelamin		= mysqli_real_escape_string($conn, $_POST['jenis_kelamin']); 
-		$agama				= mysqli_real_escape_string($conn, $_POST['agama']); 
-		$gol_darah			= mysqli_real_escape_string($conn, $_POST['gol_darah']); 
-		$tinggi_badan		= mysqli_real_escape_string($conn, $_POST['tinggi_badan']);
-		$berat_badan		= mysqli_real_escape_string($conn, $_POST['berat_badan']); 
-		$suku				= mysqli_real_escape_string($conn, $_POST['suku']);
-		$bahasa				= mysqli_real_escape_string($conn, $_POST['bahasa']);
-		$kewarganegaraan	= mysqli_real_escape_string($conn, $_POST['kewarganegaraan']);
-		$status_anak		= mysqli_real_escape_string($conn, $_POST['suku']);
-		$anak_ke			= mysqli_real_escape_string($conn, $_POST['anak_ke']);
-		$jumlah_saudara		= mysqli_real_escape_string($conn, $_POST['jumlah_saudara']);
-		$jenis_tinggal		= mysqli_real_escape_string($conn, $_POST['jenis_tinggal']);
-		$alamat_tinggal		= mysqli_real_escape_string($conn, $_POST['alamat_tinggal']);
-		$provinsi_tinggal	= mysqli_real_escape_string($conn, $_POST['provinsi_tinggal']);
-		$kab_kota_tinggal	= mysqli_real_escape_string($conn, $_POST['kab_kota_tinggal']);
-		$kecamatan_tinggal	= mysqli_real_escape_string($conn, $_POST['kecamatan_tinggal']);
-		$kelurahan_tinggal	= mysqli_real_escape_string($conn, $_POST['kelurahan_tinggal']);
-		$kode_pos			= mysqli_real_escape_string($conn, $_POST['kode_pos']);
-		$jarak_ke_sekolah	= mysqli_real_escape_string($conn, $_POST['jarak_ke_sekolah']);
-		$riwayat_penyakit	= mysqli_real_escape_string($conn, $_POST['riwayat_penyakit']);
+		$nisn 				= mysqli_real_escape_string($conn, $_POST['nisn'] ?? '');
+		$nik = mysqli_real_escape_string($conn, $_POST['nik']);
+		$nama_lengkap = mysqli_real_escape_string($conn, $_POST['nama_lengkap']);
+		$no_telp = mysqli_real_escape_string($conn, $_POST['no_telp']);
+		$tanggal_lahir = mysqli_real_escape_string($conn, $_POST['tanggal_lahir']);
+		$asal_sekolah = mysqli_real_escape_string($conn, $_POST['asal_sekolah']);
 		$tgl_buat 			= date('Y-m-d H:i:s');
-
+		
 		$query = mysqli_query($conn, "INSERT INTO identitas_siswa SET NISN = '$nisn',
 																	  No_KK = '$no_kk',
 																	  NIK = '$nik',
-																	  Nama_Panggilan = '$nama_panggilan',
 																	  Nama_Peserta_Didik = '$nama_lengkap',
-																	  Tempat_Lahir = '$tempat_lahir',
+																	  no_telepon = '$no_telp',
 																	  Tanggal_Lahir = '$tanggal_lahir',
-																	  Jenis_Kelamin = '$jenis_kelamin',
-																	  Agama = '$agama',
-																	  Gol_Darah = '$gol_darah',
-																	  Tinggi_Badan = '$tinggi_badan',
-																	  Berat_Badan = '$berat_badan',
-																	  Suku = '$suku',
-																	  Bahasa = '$bahasa',
-																	  Kewarganegaraan = '$kewarganegaraan',
-																	  Status_Anak = '$status_anak',
-																	  Anak_Ke = '$anak_ke',
-																	  Jml_Saudara = '$jumlah_saudara',
-																	  Jenis_Tinggal = '$jenis_tinggal',
-																	  Alamat_Tinggal = '$alamat_tinggal',
-																	  Provinsi_Tinggal = '$provinsi_tinggal',
-																	  Kab_Kota_Tinggal = '$kab_kota_tinggal',
-																	  Kec_Tinggal = '$kecamatan_tinggal',
-																	  Kelurahan_Tinggal = '$kelurahan_tinggal',
-																	  Kode_POS = '$kode_pos',
-																	  Jarak_ke_Sekolah = '$jarak_ke_sekolah',
-																	  Riwayat_Penyakit = '$riwayat_penyakit',
+																	  asal_sekolah = '$asal_sekolah',
+																	  status_administrasi = 0,
+																	  status_ortu = 0,
+																	  status_pendaftaran = 'Menunggu Verifikasi',
 																	  tgl_buat = '$tgl_buat' ");
-
 		if($query) {
+
 			// session login
 			$_SESSION['nisnPeserta'] = $nisn; 
 			$_SESSION['namaPeserta'] = $nama_lengkap; 
-			$_SESSION['tlPeserta'] = $tanggal_lahir; 
-			
-			$_SESSION['alert'] = '<div class="alert alert-success alert-has-icon" id="alert">
+			$_SESSION['tlPeserta'] = $tanggal_lahir;
+			$_SESSION['status_administrasi'] = 0;
+			$_SESSION['status_ortu'] = 0;
+
+		$_SESSION['alert'] = '<div class="alert alert-success alert-has-icon" id="alert">
 			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
 			                        <div class="alert-body">
 			                          <button class="close" data-dismiss="alert">
@@ -79,7 +45,7 @@
 			                          Data berhasil ditambahkan.
 			                        </div>
 			                      </div>';
-			header('Location: ../../view/halaman/daftarSiswa.php');
+			header('Location: ../../view/halaman/dashboard.php');
 		} else {
 			$_SESSION['alert'] = '<div class="alert alert-danger alert-has-icon" id="alert">
 			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
@@ -91,41 +57,116 @@
 			                          Data gagal ditambahkan.
 			                        </div>
 			                      </div>';
-			header('Location: ../../view/halaman/daftarSiswa.php');
+			header('Location: ../../view/halaman/dashboard.php');
+		}
+	}
+
+	// Batalkan Pendaftaran / Hapus Data
+	if (isset($_POST['hapusDataSiswa'])) {
+		$id = $_POST['id'];
+		
+		// Ambil jurusan sebelum hapus
+		$query_jurusan = mysqli_query($conn, "SELECT jurusan_pilihan FROM identitas_siswa WHERE Id_Identitas_Siswa = '$id'");
+		$data = mysqli_fetch_assoc($query_jurusan);
+		$jurusan = $data['jurusan_pilihan'];
+		
+		// Hapus data
+		$query_hapus = mysqli_query($conn, "DELETE FROM identitas_siswa WHERE Id_Identitas_Siswa = '$id'");
+		
+		if($query_hapus) {
+			// KURANGI KUOTA TERISI
+			mysqli_query($conn, "UPDATE setting_kuota SET kuota_terisi = kuota_terisi - 1 WHERE jurusan = '$jurusan'");
+			
+			$_SESSION['alert'] = '<div class="alert alert-success">Data berhasil dihapus.</div>';
 		}
 	}
 
 	// Ubah Data
 	if (isset($_POST['ubahDataSiswa'])) {
 		$id 				= $_POST['id'];
-		$nisn 				= mysqli_real_escape_string($conn, $_POST['nisn']); 
-		$no_kk 				= mysqli_real_escape_string($conn, $_POST['no_kk']); 
-		$nik 				= mysqli_real_escape_string($conn, $_POST['nik']); 
-		$nama_panggilan		= mysqli_real_escape_string($conn, $_POST['nama_panggilan']); 
-		$nama_lengkap		= mysqli_real_escape_string($conn, $_POST['nama_lengkap']); 
-		$tempat_lahir		= mysqli_real_escape_string($conn, $_POST['tempat_lahir']); 
-		$tanggal_lahir		= mysqli_real_escape_string($conn, $_POST['tanggal_lahir']); 
-		$jenis_kelamin		= mysqli_real_escape_string($conn, $_POST['jenis_kelamin']); 
-		$agama				= mysqli_real_escape_string($conn, $_POST['agama']); 
-		$gol_darah			= mysqli_real_escape_string($conn, $_POST['gol_darah']); 
-		$tinggi_badan		= mysqli_real_escape_string($conn, $_POST['tinggi_badan']);
-		$berat_badan		= mysqli_real_escape_string($conn, $_POST['berat_badan']); 
-		$suku				= mysqli_real_escape_string($conn, $_POST['suku']);
-		$bahasa				= mysqli_real_escape_string($conn, $_POST['bahasa']);
-		$kewarganegaraan	= mysqli_real_escape_string($conn, $_POST['kewarganegaraan']);
-		$status_anak		= mysqli_real_escape_string($conn, $_POST['suku']);
-		$anak_ke			= mysqli_real_escape_string($conn, $_POST['anak_ke']);
-		$jumlah_saudara		= mysqli_real_escape_string($conn, $_POST['jumlah_saudara']);
-		$jenis_tinggal		= mysqli_real_escape_string($conn, $_POST['jenis_tinggal']);
-		$alamat_tinggal		= mysqli_real_escape_string($conn, $_POST['alamat_tinggal']);
-		$provinsi_tinggal	= mysqli_real_escape_string($conn, $_POST['provinsi_tinggal']);
-		$kab_kota_tinggal	= mysqli_real_escape_string($conn, $_POST['kab_kota_tinggal']);
-		$kecamatan_tinggal	= mysqli_real_escape_string($conn, $_POST['kecamatan_tinggal']);
-		$kelurahan_tinggal	= mysqli_real_escape_string($conn, $_POST['kelurahan_tinggal']);
-		$kode_pos			= mysqli_real_escape_string($conn, $_POST['kode_pos']);
-		$jarak_ke_sekolah	= mysqli_real_escape_string($conn, $_POST['jarak_ke_sekolah']);
-		$riwayat_penyakit	= mysqli_real_escape_string($conn, $_POST['riwayat_penyakit']);
+		$nisn 				= mysqli_real_escape_string($conn, $_POST['nisn'] ?? ''); 
+		$no_kk 				= mysqli_real_escape_string($conn, $_POST['no_kk'] ?? ''); 
+		$nik 				= mysqli_real_escape_string($conn, $_POST['nik'] ?? ''); 
+		$nama_panggilan		= mysqli_real_escape_string($conn, $_POST['nama_panggilan'] ?? ''); 
+		$nama_lengkap		= mysqli_real_escape_string($conn, $_POST['nama_lengkap'] ?? ''); 
+		$tempat_lahir		= mysqli_real_escape_string($conn, $_POST['tempat_lahir'] ?? ''); 
+		$tanggal_lahir		= mysqli_real_escape_string($conn, $_POST['tanggal_lahir'] ?? ''); 
+		$jenis_kelamin		= mysqli_real_escape_string($conn, $_POST['jenis_kelamin'] ?? ''); 
+		$agama				= mysqli_real_escape_string($conn, $_POST['agama'] ?? ''); 
+		$gol_darah			= mysqli_real_escape_string($conn, $_POST['gol_darah'] ?? ''); 
+		$tinggi_badan		= mysqli_real_escape_string($conn, $_POST['tinggi_badan' ?? '']);
+		$berat_badan		= mysqli_real_escape_string($conn, $_POST['berat_badan'] ?? ''); 
+		$suku				= mysqli_real_escape_string($conn, $_POST['suku' ?? '']);
+		$bahasa				= mysqli_real_escape_string($conn, $_POST['bahasa' ?? '']);
+		$kewarganegaraan	= mysqli_real_escape_string($conn, $_POST['kewarganegaraan' ?? '']);
+		$status_anak		= mysqli_real_escape_string($conn, $_POST['suku' ?? '']);
+		$anak_ke			= mysqli_real_escape_string($conn, $_POST['anak_ke' ?? '']);
+		$jumlah_saudara		= mysqli_real_escape_string($conn, $_POST['jumlah_saudara' ?? '']);
+		$jenis_tinggal		= mysqli_real_escape_string($conn, $_POST['jenis_tinggal' ?? '']);
+		$alamat_tinggal		= mysqli_real_escape_string($conn, $_POST['alamat_tinggal' ?? '']);
+		$provinsi_tinggal	= mysqli_real_escape_string($conn, $_POST['provinsi_tinggal' ?? '']);
+		$kab_kota_tinggal	= mysqli_real_escape_string($conn, $_POST['kab_kota_tinggal' ?? '']);
+		$kecamatan_tinggal	= mysqli_real_escape_string($conn, $_POST['kecamatan_tinggal' ?? '']);
+		$kelurahan_tinggal	= mysqli_real_escape_string($conn, $_POST['kelurahan_tinggal' ?? '']);
+		$kode_pos			= mysqli_real_escape_string($conn, $_POST['kode_pos' ?? '']);
+		$jarak_ke_sekolah	= mysqli_real_escape_string($conn, $_POST['jarak_ke_sekolah' ?? '']);
+		$riwayat_penyakit	= mysqli_real_escape_string($conn, $_POST['riwayat_penyakit' ?? '']);
+		$jurusan_pilihan = mysqli_real_escape_string($conn, $_POST['jurusan_pilihan'] ?? '');
+		$kelainan_jasmani = mysqli_real_escape_string($conn, $_POST['kelainan_jasmani'] ?? '');
+		$kebutuhan_khusus = mysqli_real_escape_string($conn, $_POST['kebutuhan_khusus'] ?? '');
+		$hobi = mysqli_real_escape_string($conn, $_POST['hobi'] ?? '');
+		$nama_ayah = mysqli_real_escape_string($conn, $_POST['nama_ayah'] ?? '');
+		$nama_ibu = mysqli_real_escape_string($conn, $_POST['nama_ibu'] ?? '');
+		$alamat_ortu = mysqli_real_escape_string($conn, $_POST['alamat_ortu'] ?? '');
+		$no_telp = mysqli_real_escape_string($conn, $_POST['no_telp'] ?? '');
+		$email = mysqli_real_escape_string($conn, $_POST['email'] ?? '');
+		$asal_sekolah = mysqli_real_escape_string($conn, $_POST['asal_sekolah'] ?? '');
+		$alamat_sekolah = mysqli_real_escape_string($conn, $_POST['alamat_sekolah'] ?? '');
+		$tinggal_bersama = mysqli_real_escape_string($conn, $_POST['tinggal_bersama'] ?? '');
+		$transport = mysqli_real_escape_string($conn, $_POST['transport'] ?? '');
+		$tgl_ubah = date('Y-m-d H:i:s');
 
+		$jurusan_pilihan_baru = mysqli_real_escape_string($conn, $_POST['jurusan_pilihan'] ?? '');
+		
+		// Ambil jurusan lama
+		$query_jurusan_lama = mysqli_query($conn, "SELECT jurusan_pilihan FROM identitas_siswa WHERE Id_Identitas_Siswa = '$id'");
+		$data_jurusan = mysqli_fetch_assoc($query_jurusan_lama);
+		$jurusan_pilihan_lama = $data_jurusan['jurusan_pilihan'];
+
+		// Jika jurusan berubah
+		if ($jurusan_pilihan_lama != $jurusan_pilihan_baru) {
+
+			// Cek kuota baru
+			$query_kuota_baru = mysqli_query($conn, "SELECT kuota_total, kuota_terisi FROM setting_kuota WHERE jurusan = '$jurusan_pilihan_baru'");
+			$kuota_baru = mysqli_fetch_assoc($query_kuota_baru);
+
+			if (!$kuota_baru) {
+				throw new Exception("Jurusan $jurusan_pilihan_baru tidak ditemukan");
+			}
+
+			if ($kuota_baru['kuota_terisi'] >= $kuota_baru['kuota_total']) {
+				throw new Exception("Kuota jurusan $jurusan_pilihan_baru sudah penuh");
+			}
+
+			// Kurangi kuota lama hanya jika masih lebih dari 0
+			mysqli_query($conn, "UPDATE setting_kuota 
+				SET kuota_terisi = GREATEST(kuota_terisi - 1, 0)
+				WHERE jurusan = '$jurusan_pilihan_lama'");
+
+			// Tambah kuota baru (tapi pastikan belum penuh)
+			mysqli_query($conn, "UPDATE setting_kuota 
+				SET kuota_terisi = kuota_terisi + 1
+				WHERE TRIM(jurusan) = TRIM('$jurusan_pilihan_baru')
+				AND kuota_terisi < kuota_total");
+
+
+			if (mysqli_affected_rows($conn) == 0) {
+				throw new Exception("Gagal menambah kuota pada jurusan baru (mungkin sudah penuh)");
+			}
+		}
+
+
+		
 		$query = mysqli_query($conn, "UPDATE identitas_siswa SET NISN = '$nisn',
 																 No_KK = '$no_kk',
 																 NIK = '$nik',
@@ -153,7 +194,19 @@
 																 Kode_POS = '$kode_pos',
 																 Jarak_ke_Sekolah = '$jarak_ke_sekolah',
 																 Riwayat_Penyakit = '$riwayat_penyakit',
-																 tgl_buat = '$tgl_buat'  
+																 Jurusan_Pilihan = '$jurusan_pilihan',
+																 Kebutuhan_Khusus = '$kebutuhan_khusus',
+																 Hobi = '$hobi',
+																 Nama_Ayah = '$nama_ayah',
+																 Nama_Ibu = '$nama_ibu',
+																 Alamat_Ortu = '$alamat_ortu',
+																 No_Telp = '$no_telp',
+																 Email = '$email',
+																 Asal_Sekolah = '$asal_sekolah',
+																 Alamat_Sekolah = '$alamat_sekolah',
+																 Tinggal_Bersama = '$tinggal_bersama',
+																 Transport = '$transport',
+																 tgl_ubah = '$tgl_ubah'
 									  					WHERE Id_Identitas_Siswa = '$id' ") or die(mysqli_error($conn));
 
 		if($query) {
@@ -167,7 +220,7 @@
 			                          Data berhasil diubah.
 			                        </div>
 			                      </div>';
-			header('Location: ../../view/halaman/daftarSiswa.php');
+			header('Location: ../../view/halaman/dashboard.php');
 		} else {
 			$_SESSION['alert'] = '<div class="alert alert-danger alert-has-icon" id="alert">
 			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
@@ -179,8 +232,40 @@
 			                          Data gagal diubah.
 			                        </div>
 			                      </div>';
-			header('Location: ../../view/halaman/daftarSiswa.php');
+			header('Location: ../../view/halaman/dashboard.php');
 		}
+	}
+
+	// Update Status Pembayaran
+	if (isset($_POST['updateStatusPembayaran'])) {
+		$id_siswa = $_POST['id_siswa'];
+		$status = $_POST['status'];
+
+		if ($status == 'Lunas') {
+			// Update di tabel identitas_siswa
+			$query1 = mysqli_query($conn, "UPDATE identitas_siswa SET status_administrasi = 1 WHERE Id_Identitas_Siswa = '$id_siswa'");
+
+			// Update atau insert di tabel administrasi
+			$cek_administrasi = mysqli_query($conn, "SELECT * FROM administrasi WHERE id_identitas_siswa = '$id_siswa'");
+
+			if (mysqli_num_rows($cek_administrasi) > 0) {
+				// Update jika sudah ada
+				$query2 = mysqli_query($conn, "UPDATE administrasi SET status = 'Lunas', tgl_ubah = NOW() WHERE id_identitas_siswa = '$id_siswa'");
+			} else {
+				// Insert baru jika belum ada
+				$query2 = mysqli_query($conn, "INSERT INTO administrasi (id_identitas_siswa, harga, status, tgl_buat) 
+											VALUES ('$id_siswa', 100000, 'Lunas', NOW())");
+			}
+
+			if ($query1 && $query2) {
+				$_SESSION['alert'] = '<div class="alert alert-success">Status pembayaran berhasil diupdate menjadi LUNAS.</div>';
+			} else {
+				$_SESSION['alert'] = '<div class="alert alert-danger">Gagal update status pembayaran.</div>';
+			}
+		}
+
+		header('Location: ../../view/admin/daftarSiswa.php');
+		exit();
 	}
 
 	// Tambah Data Ortu
@@ -206,18 +291,18 @@
 		$penghasilan_ibu			= mysqli_real_escape_string($conn, $_POST['penghasilan_ibu']); 
 		$alamat_ibu					= mysqli_real_escape_string($conn, $_POST['alamat_ibu']); 
 		// Data Wali
-		$nama_wali 					= mysqli_real_escape_string($conn, $_POST['nama_wali']); 
-		$status_wali 				= mysqli_real_escape_string($conn, $_POST['status_wali']); 
-		$tanggal_lahir_wali 		= mysqli_real_escape_string($conn, $_POST['tanggal_lahir_wali']); 
-		$telepon_wali				= mysqli_real_escape_string($conn, $_POST['telepon_wali']); 
-		$pendidikan_terakhir_wali	= mysqli_real_escape_string($conn, $_POST['pendidikan_terakhir_wali']); 
-		$pekerjaan_wali				= mysqli_real_escape_string($conn, $_POST['pekerjaan_wali']); 
-		$penghasilan_wali			= mysqli_real_escape_string($conn, $_POST['penghasilan_wali']); 
-		$alamat_wali				= mysqli_real_escape_string($conn, $_POST['alamat_wali']); 
+		$tanggal_lahir_wali_sql = !empty($_POST['tanggal_lahir_wali']) ? "'" . $_POST['tanggal_lahir_wali'] . "'" : "NULL";
+		// $nama_wali = !empty($_POST['nama_wali']) ? $_POST['nama_wali'] : NULL;
+		// $status_wali = !empty($_POST['status_wali']) ? $_POST['status_wali'] : NULL;
+		// $telepon_wali = !empty($_POST['telepon_wali']) ? $_POST['telepon_wali'] : NULL;
+		// $pendidikan_terakhir_wali = !empty($_POST['pendidikan_terakhir_wali']) ? $_POST['pendidikan_terakhir_wali'] : NULL;
+		// $pekerjaan_wali = !empty($_POST['pekerjaan_wali']) ? $_POST['pekerjaan_wali'] : NULL;
+		// $penghasilan_wali = !empty($_POST['penghasilan_wali']) ? $_POST['penghasilan_wali'] : NULL;
+		// $alamat_wali = !empty($_POST['alamat_wali']) ? $_POST['alamat_wali'] : NULL;
 		
 		$tgl_buat 					= date('Y-m-d H:i:s');
 
-		$query = mysqli_query($conn, "INSERT INTO orang_tua_wali SET Id_Identitas_Siswa = '$peserta',
+	$query = mysqli_query($conn, "INSERT INTO orang_tua_wali SET Id_Identitas_Siswa = '$peserta',
 																	  Nama_Ayah = '$nama_ayah',
 																	  Status_Ayah = '$status_ayah',
 																	  Tgl_Lahir_Ayah = '$tanggal_lahir_ayah',
@@ -234,16 +319,15 @@
 																	  Pekerjaan_Ibu = '$pekerjaan_ibu',
 																	  Penghasilan_Ibu = '$penghasilan_ibu',
 																	  Alamat_Ibu = '$alamat_ibu',
-																	  Nama_Wali = '$nama_wali',
-																	  Status_Wali = '$status_wali',
-																	  Tgl_Lahir_Wali = '$tanggal_lahir_wali',
-																	  Telepon_Wali = '$telepon_wali',
-																	  Pendidikan_Terakhir_Wali = '$pendidikan_terakhir_wali',
-																	  Pekerjaan_Wali = '$pekerjaan_wali',
-																	  Penghasilan_Wali = '$penghasilan_wali',
-																	  Alamat_Wali = '$alamat_wali',
+																	  Nama_Wali = " . (!empty($nama_wali) ? "'$nama_wali'" : "NULL") . ",
+																		Status_Wali = " . (!empty($status_wali) ? "'$status_wali'" : "NULL") . ",
+																		Tgl_Lahir_Wali = $tanggal_lahir_wali_sql,
+																		Telepon_Wali = " . (!empty($telepon_wali) ? "'$telepon_wali'" : "NULL") . ",
+																		Pendidikan_Terakhir_Wali = " . (!empty($pendidikan_terakhir_wali) ? "'$pendidikan_terakhir_wali'" : "NULL") . ",
+																		Pekerjaan_Wali = " . (!empty($pekerjaan_wali) ? "'$pekerjaan_wali'" : "NULL") . ",
+																		Penghasilan_Wali = " . (!empty($penghasilan_wali) ? "'$penghasilan_wali'" : "NULL") . ",
+																		Alamat_Wali = " . (!empty($alamat_wali) ? "'$alamat_wali'" : "NULL") . ",
 																	  tgl_buat = '$tgl_buat' ");
-
 		if($query) {
 			$_SESSION['status_ortu'] = 1; 
 			$_SESSION['alert'] = '<div class="alert alert-success alert-has-icon" id="alert">
@@ -303,7 +387,9 @@
 		$pendidikan_terakhir_wali	= mysqli_real_escape_string($conn, $_POST['pendidikan_terakhir_wali']); 
 		$pekerjaan_wali				= mysqli_real_escape_string($conn, $_POST['pekerjaan_wali']); 
 		$penghasilan_wali			= mysqli_real_escape_string($conn, $_POST['penghasilan_wali']); 
-		$alamat_wali				= mysqli_real_escape_string($conn, $_POST['alamat_wali']); 
+		$alamat_wali				= mysqli_real_escape_string($conn, $_POST['alamat_wali']);
+
+		$tgl_ubah = date('Y-m-d H:i:s');
 
 		$query = mysqli_query($conn, "UPDATE orang_tua_wali SET Id_Identitas_Siswa = '$peserta',
 																Nama_Ayah = '$nama_ayah',
@@ -372,8 +458,10 @@
 				$_SESSION['nisnPeserta'] = $nisn; 
 				$_SESSION['namaPeserta'] = $row['Nama_Peserta_Didik']; 
 				$_SESSION['tlPeserta'] = $tanggal_lahir; 
-				$_SESSION['status_ortu'] = $row['status_ortu']; 
-				header('Location: ../../view/halaman/daftarSiswa.php');
+				$_SESSION['status_ortu'] = $row['status_ortu'];
+				$_SESSION['status_administrasi'] = $row['status_administrasi'];
+				$_SESSION['jurusan_pilihan'] = $row['jurusan_pilihan'];
+				header('Location: ../../view/halaman/dashboard.php');
 			}
 		} else {
 			$_SESSION['alert'] = '<div class="alert alert-danger alert-has-icon" id="alert">
