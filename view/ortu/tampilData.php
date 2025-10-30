@@ -52,7 +52,20 @@
                   	include('../../config/connection.php');
 
                     $no = 1;
-                    $data = mysqli_query($conn, "SELECT NISN, Id_Orang_Tua_Wali, Nama_Peserta_Didik, Nama_Ayah, Nama_Ibu, Nama_Wali, a.tgl_ubah FROM orang_tua_wali a LEFT JOIN identitas_siswa b ON a.Id_Identitas_Siswa = b.Id_Identitas_Siswa") or die(mysqli_error($conn));
+                    $data = mysqli_query($conn, "
+                      SELECT 
+                        b.NISN, 
+                        a.Id_Orang_Tua_Wali, 
+                        b.Nama_Peserta_Didik, 
+                        a.Nama_Ayah, 
+                        a.Nama_Ibu, 
+                        a.Nama_Wali, 
+                        a.tgl_ubah 
+                      FROM orang_tua_wali a
+                      LEFT JOIN identitas_siswa b 
+                        ON a.Id_Identitas_Siswa = b.Id_Identitas_Siswa
+                    ") or die(mysqli_error($conn));
+
                     foreach ($data as $row) { 
                   ?>
                   <tr>
