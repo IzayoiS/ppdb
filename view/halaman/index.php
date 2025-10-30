@@ -21,7 +21,7 @@
 
     <!-- MAIN CSS -->
     <link rel="stylesheet" href="../../assets/style/css/style.css">
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
 
   <body data-spy="scroll" data-target=".site-navbar-target" data-offset="300">
@@ -42,18 +42,6 @@
 
       <header class="site-navbar site-navbar-target" role="banner">
         <div class="ml-auto d-none d-lg-block">
-  <?php
-  include('../../config/connection.php');
-  $kuota = mysqli_query($conn, "SELECT jurusan, kuota_total, kuota_terisi FROM setting_kuota");
-  while ($row = mysqli_fetch_assoc($kuota)) {
-      $sisa = $row['kuota_total'] - $row['kuota_terisi'];
-      $status = $sisa <= 0 ? 'Penuh' : 'Sisa ' . $sisa;
-      $warna = $sisa <= 0 ? 'text-danger' : 'text-success';
-      echo "<span class='ml-3 small font-weight-bold {$warna}'>
-            {$row['jurusan']}: {$status}
-            </span>";
-  }
-  ?>
 </div>
 
 
@@ -120,6 +108,16 @@
     </div>
 
 
+    <!-- === BAGIAN KUOTA JURUSAN DENGAN DIAGRAM === -->
+    <div class="container my-4">
+      <div class="card shadow-sm p-3">
+        <h5 class="text-center mb-3 text-dark font-weight-bold">Diagram Sisa Kuota Jurusan</h5>
+        <canvas id="chartKuota" height="100"></canvas>
+        <div id="keteranganKuota" class="mt-3 text-center"></div>
+      </div>
+    </div>
+    <!-- === END BAGIAN DIAGRAM === -->
+    
     <div class="site-section">
       <div class="container">
         <div class="row mb-5">
@@ -195,6 +193,62 @@
     <!-- <script src="../../assets/style/js/aos.js"></script> -->
     <!-- <script src="../../assets/style/js/main.js"></script> -->
 
+    <!-- === SCRIPT UNTUK CHART KUOTA === -->
+    <?php
+      include('../../config/connection.php');
+      $kuota = mysqli_query($conn, "SELECT jurusan, kuota_total, kuota_terisi FROM setting_kuota");
+      $labels = [];
+      $data_sisa = [];
+      $data_terisi = [];
+      $data_total = [];
+
+      while ($row = mysqli_fetch_assoc($kuota)) {
+        $sisa = $row['kuota_total'] - $row['kuota_terisi'];
+        $labels[] = $row['jurusan'];
+        $data_sisa[] = $sisa;
+        $data_terisi[] = $row['kuota_terisi'];
+        $data_total[] = $row['kuota_total'];
+      }
+      ?>
+      <script>
+        const labels = <?php echo json_encode($labels); ?>;
+        const sisa = <?php echo json_encode($data_sisa); ?>;
+        const terisi = <?php echo json_encode($data_terisi); ?>;
+        const total = <?php echo json_encode($data_total); ?>;
+
+        const ctx = document.getElementById('chartKuota').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Sisa Kuota',
+              data: sisa,
+              borderWidth: 1,
+              backgroundColor: '#4CAF50'
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: { beginAtZero: true, title: { display: true, text: 'Jumlah Sisa Kuota' } },
+              x: { title: { display: true, text: 'Jurusan' } }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+
+        // === Tambahkan keterangan X/Y di bawah chart ===
+        const keteranganDiv = document.getElementById('keteranganKuota');
+        let html = '';
+        labels.forEach((nama, i) => {
+          const status = terisi[i] >= total[i]
+            ? `<span class='text-danger'>(Penuh)</span>`
+            : `<span class='text-success'>(Tersisa ${sisa[i]})</span>`;
+          html += `<div class="small mb-1">${nama}: <b>${terisi[i]}/${total[i]}</b> ${status}</div>`;
+        });
+        keteranganDiv.innerHTML = html;
+      </script>
   </body>
 
 </html>
