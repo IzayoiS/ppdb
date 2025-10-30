@@ -182,33 +182,35 @@
 	if (isset($_GET['hapusData'])) {
 		$id = $_GET['hapusData'];
 
+		// Hapus data terkait dulu
+		mysqli_query($conn, "DELETE FROM administrasi WHERE id_identitas_siswa = $id");
+		mysqli_query($conn, "DELETE FROM orang_tua_wali WHERE Id_Identitas_Siswa = $id");
+
+		// Baru hapus data siswa
 		$query = mysqli_query($conn, "DELETE FROM identitas_siswa WHERE Id_Identitas_Siswa = $id");
 
 		if($query) {
 			$_SESSION['alert'] = '<div class="alert alert-success alert-has-icon" id="alert">
-			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
-			                        <div class="alert-body">
-			                          <button class="close" data-dismiss="alert">
-			                            <span>×</span>
-			                          </button>
-			                          <div class="alert-title">Berhasil</div>
-			                          Data berhasil dihapus.
-			                        </div>
-			                      </div>';
-			header('Location: ../../view/siswa/tampilData.php');
+				<div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+				<div class="alert-body">
+					<button class="close" data-dismiss="alert"><span>×</span></button>
+					<div class="alert-title">Berhasil</div>
+					Data berhasil dihapus.
+				</div>
+			</div>';
 		} else {
 			$_SESSION['alert'] = '<div class="alert alert-danger alert-has-icon" id="alert">
-			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
-			                        <div class="alert-body">
-			                          <button class="close" data-dismiss="alert">
-			                            <span>×</span>
-			                          </button>
-			                          <div class="alert-title">Gagal</div>
-			                          Data gagal dihapus.
-			                        </div>
-			                      </div>';
-			header('Location: ../../view/siswa/tampilData.php');
+				<div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+				<div class="alert-body">
+					<button class="close" data-dismiss="alert"><span>×</span></button>
+					<div class="alert-title">Gagal</div>
+					Data gagal dihapus.
+				</div>
+			</div>';
 		}
+
+		header('Location: ../../view/siswa/tampilData.php');
 	}
+
 
 ?>
