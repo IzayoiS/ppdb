@@ -41,6 +41,21 @@
 
 
       <header class="site-navbar site-navbar-target" role="banner">
+        <div class="ml-auto d-none d-lg-block">
+  <?php
+  include('../../config/connection.php');
+  $kuota = mysqli_query($conn, "SELECT jurusan, kuota_total, kuota_terisi FROM setting_kuota");
+  while ($row = mysqli_fetch_assoc($kuota)) {
+      $sisa = $row['kuota_total'] - $row['kuota_terisi'];
+      $status = $sisa <= 0 ? 'Penuh' : 'Sisa ' . $sisa;
+      $warna = $sisa <= 0 ? 'text-danger' : 'text-success';
+      echo "<span class='ml-3 small font-weight-bold {$warna}'>
+            {$row['jurusan']}: {$status}
+            </span>";
+  }
+  ?>
+</div>
+
 
         <div class="container mb-3">
           <div class="d-flex align-items-center">
