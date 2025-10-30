@@ -83,6 +83,50 @@
         </div>
       </div>
     </div>
+    <?php
+    // Ambil semua data jurusan dari tabel setting_kuota
+    $query = mysqli_query($conn, "SELECT jurusan, kuota_total, kuota_terisi FROM setting_kuota");
+
+    while ($row = mysqli_fetch_assoc($query)) {
+        $jurusan = $row['jurusan'];
+        $kuota_total = $row['kuota_total'];
+        $kuota_terisi = $row['kuota_terisi'];
+        $persentase = $kuota_total > 0 ? round(($kuota_terisi / $kuota_total) * 100) : 0;
+
+        // Tentukan warna ikon sesuai jurusan
+        switch ($jurusan) {
+            case 'TKJT':
+                $bg_color = 'bg-success';
+                $icon = 'fa-network-wired';
+                break;
+            case 'PPLG':
+                $bg_color = 'bg-secondary';
+                $icon = 'fa-laptop-code';
+                break;
+            default:
+                $bg_color = 'bg-primary';
+                $icon = 'fa-school';
+                break;
+        }
+    ?>
+        <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+            <div class="card card-statistic-1">
+                <div class="card-icon <?= $bg_color ?>">
+                    <i class="fas <?= $icon ?>"></i>
+                </div>
+                <div class="card-wrap">
+                    <div class="card-header">
+                        <h4>Kuota <?= htmlspecialchars($jurusan) ?></h4>
+                    </div>
+                    <div class="card-body">
+                        <?= $kuota_terisi ?> / <?= $kuota_total ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php
+    }
+    ?>
   </div>
 
   <!-- hmm -->
