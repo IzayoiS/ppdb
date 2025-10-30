@@ -1,118 +1,191 @@
-<?php 
-	
-	session_start();
-	include("../../config/connection.php");
+<?php
+session_start();
+include("../../config/connection.php");
 
-	// Tambah Data
-	if (isset($_POST['tambahData'])) {
-		$peserta 	= mysqli_real_escape_string($conn, $_POST['peserta']); 
-		$harga 		= mysqli_real_escape_string($conn, $_POST['harga']); 
-		$status 	= mysqli_real_escape_string($conn, $_POST['status']);
-		$tgl_buat 	= date('Y-m-d H:i:s');
+// Tambah Data
+if (isset($_POST['tambahData'])) {
+	$peserta = $_POST['peserta'];
+	$harga = $_POST['harga'];
+	$status = $_POST['status'];
+	$tgl_buat = date('Y-m-d H:i:s');
 
-		$query = mysqli_query($conn, "INSERT INTO administrasi SET  id_identitas_siswa = '$peserta',
-																	harga = '$harga',
-																	status = '$status',
-																	tgl_buat = '$tgl_buat' ") or die(mysqli_error($conn));
+	$stmt = $conn->prepare("INSERT INTO administrasi (id_identitas_siswa, harga, status, tgl_buat) VALUES (?, ?, ?, ?)");
+	if ($stmt) {
+		$stmt->bind_param("sdss", $peserta, $harga, $status, $tgl_buat);
+		$query = $stmt->execute();
+		$stmt->close();
+	} else {
+		$query = false;
+	}
 
-		if($query) {
-			$_SESSION['alert'] = '<div class="alert alert-success alert-has-icon" id="alert">
-			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
-			                        <div class="alert-body">
-			                          <button class="close" data-dismiss="alert">
-			                            <span>×</span>
-			                          </button>
-			                          <div class="alert-title">Berhasil</div>
-			                          Data berhasil ditambahkan.
-			                        </div>
-			                      </div>';
-			header('Location: ../../view/administrasi/tampilData.php');
-		} else {
-			$_SESSION['alert'] = '<div class="alert alert-danger alert-has-icon" id="alert">
-			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
-			                        <div class="alert-body">
-			                          <button class="close" data-dismiss="alert">
-			                            <span>×</span>
-			                          </button>
-			                          <div class="alert-title">Gagal</div>
-			                          Data gagal ditambahkan.
-			                        </div>
-			                      </div>';
-			header('Location: ../../view/administrasi/tampilData.php');
+	$_SESSION['alert'] = $query
+		? '<div class="alert alert-success alert-has-icon" id="alert">
+              <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+              <div class="alert-body">
+                <button class="close" data-dismiss="alert"><span>×</span></button>
+                <div class="alert-title">Berhasil</div> Data berhasil ditambahkan.
+              </div>
+           </div>'
+		: '<div class="alert alert-danger alert-has-icon" id="alert">
+              <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+              <div class="alert-body">
+                <button class="close" data-dismiss="alert"><span>×</span></button>
+                <div class="alert-title">Gagal</div> Data gagal ditambahkan.
+              </div>
+           </div>';
+
+	header('Location: ../../view/administrasi/tampilData.php');
+	exit;
+}
+
+// Ubah Data
+if (isset($_POST['ubahData'])) {
+	$id = $_POST['id'];
+	$peserta = $_POST['peserta'];
+	$harga = $_POST['harga'];
+	$status = $_POST['status'];
+
+	$stmt = $conn->prepare("UPDATE administrasi 
+                            SET id_identitas_siswa = ?, harga = ?, status = ?
+                            WHERE id_administrasi = ?");
+	if ($stmt) {
+		$stmt->bind_param("sdsi", $peserta, $harga, $status, $id);
+		$query = $stmt->execute();
+		$stmt->close();
+	} else {
+		$query = false;
+	}
+
+	$_SESSION['alert'] = $query
+		? '<div class="alert alert-success alert-has-icon" id="alert">
+              <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+              <div class="alert-body">
+                <button class="close" data-dismiss="alert"><span>×</span></button>
+                <div class="alert-title">Berhasil</div> Data berhasil diubah.
+              </div>
+           </div>'
+		: '<div class="alert alert-danger alert-has-icon" id="alert">
+              <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+              <div class="alert-body">
+                <button class="close" data-dismiss="alert"><span>×</span></button>
+                <div class="alert-title">Gagal</div> Data gagal diubah.
+              </div>
+           </div>';
+
+	header('Location: ../../view/administrasi/tampilData.php');
+	exit;
+}
+
+// Hapus Data
+if (isset($_GET['hapusData'])) {
+	$id = $_GET['hapusData'];
+
+	$stmt = $conn->prepare("DELETE FROM administrasi WHERE id_administrasi = ?");
+	if ($stmt) {
+		$stmt->bind_param("i", $id);
+		$query = $stmt->execute();
+		$stmt->close();
+	} else {
+		$query = false;
+	}
+
+	$_SESSION['alert'] = $query
+		? '<div class="alert alert-success alert-has-icon" id="alert">
+              <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+              <div class="alert-body">
+                <button class="close" data-dismiss="alert"><span>×</span></button>
+                <div class="alert-title">Berhasil</div> Data berhasil dihapus.
+              </div>
+           </div>'
+		: '<div class="alert alert-danger alert-has-icon" id="alert">
+              <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+              <div class="alert-body">
+                <button class="close" data-dismiss="alert"><span>×</span></button>
+                <div class="alert-title">Gagal</div> Data gagal dihapus.
+              </div>
+           </div>';
+
+	header('Location: ../../view/administrasi/tampilData.php');
+	exit;
+}
+// Update Status Lunas
+if (isset($_POST['updateLunas'])) {
+	$id = $_POST['id_administrasi'];
+	$nominal = $_POST['nominal'];
+	$tgl_ubah = date('Y-m-d H:i:s');
+
+	if (empty($id)) {
+		// Buat data baru jika belum ada
+		$stmt = $conn->prepare("INSERT INTO administrasi (id_identitas_siswa, harga, status, tgl_buat, tgl_ubah) VALUES (?, ?, 'Lunas', ?, ?)");
+		$stmt->bind_param("idss", $_POST['id_identitas_siswa'], $nominal, $tgl_ubah, $tgl_ubah);
+		$stmt->execute();
+		$stmt->close();
+	} else {
+		// Update data lama
+		$stmt = $conn->prepare("UPDATE administrasi SET harga = ?, status = 'Lunas', tgl_ubah = ? WHERE id_administrasi = ?");
+		$stmt->bind_param("dsi", $nominal, $tgl_ubah, $id);
+		$stmt->execute();
+		$stmt->close();
+	}
+
+	$_SESSION['alert'] = '
+        <div class="alert alert-success alert-has-icon" id="alert">
+            <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+            <div class="alert-body">
+                <button class="close" data-dismiss="alert"><span>×</span></button>
+                <div class="alert-title">Berhasil</div>
+                Status pembayaran telah dilunasi.
+            </div>
+        </div>';
+
+	header('Location: ../../view/administrasi/tampilData.php');
+	exit;
+}
+
+// Toggle status lunas <-> belum lunas
+if (isset($_POST['toggleLunas'])) {
+	$id_administrasi = $_POST['id_administrasi'];
+	$id_identitas_siswa = $_POST['id_identitas_siswa'];
+	$tgl_ubah = date('Y-m-d H:i:s');
+
+	// Ambil status sekarang
+	$statusNow = null;
+	if (!empty($id_administrasi)) {
+		$result = $conn->query("SELECT status FROM administrasi WHERE id_administrasi = '$id_administrasi'");
+		if ($result && $result->num_rows > 0) {
+			$row = $result->fetch_assoc();
+			$statusNow = $row['status'];
 		}
 	}
 
-	// Ubah Data
-	if (isset($_POST['ubahData'])) {
-		$id = $_POST['id'];
-		$peserta 	= mysqli_real_escape_string($conn, $_POST['peserta']); 
-		$harga 		= mysqli_real_escape_string($conn, $_POST['harga']); 
-		$status 	= mysqli_real_escape_string($conn, $_POST['status']);
-		$tgl_buat 	= date('Y-m-d H:i:s');
-
-		$query = mysqli_query($conn, "UPDATE administrasi SET id_identitas_siswa = '$peserta',
-															  harga = $harga,
-															  status = '$status' 
-									  					WHERE id_administrasi = '$id' ") or die(mysqli_error($conn));
-
-		if($query) {
-			$_SESSION['alert'] = '<div class="alert alert-success alert-has-icon" id="alert">
-			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
-			                        <div class="alert-body">
-			                          <button class="close" data-dismiss="alert">
-			                            <span>×</span>
-			                          </button>
-			                          <div class="alert-title">Berhasil</div>
-			                          Data berhasil diubah.
-			                        </div>
-			                      </div>';
-			header('Location: ../../view/administrasi/tampilData.php');
-		} else {
-			$_SESSION['alert'] = '<div class="alert alert-danger alert-has-icon" id="alert">
-			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
-			                        <div class="alert-body">
-			                          <button class="close" data-dismiss="alert">
-			                            <span>×</span>
-			                          </button>
-			                          <div class="alert-title">Gagal</div>
-			                          Data gagal diubah.
-			                        </div>
-			                      </div>';
-			header('Location: ../../view/administrasi/tampilData.php');
-		}
+	if (empty($id_administrasi)) {
+		// Jika belum ada data administrasi → buat baru langsung Lunas
+		$stmt = $conn->prepare("INSERT INTO administrasi (id_identitas_siswa, harga, status, tgl_buat, tgl_ubah)
+                                VALUES (?, 0, 'Lunas', ?, ?)");
+		$stmt->bind_param("iss", $id_identitas_siswa, $tgl_ubah, $tgl_ubah);
+		$stmt->execute();
+		$stmt->close();
+	} else {
+		// Jika sudah ada, toggle status
+		$newStatus = ($statusNow == 'Lunas') ? 'Belum Lunas' : 'Lunas';
+		$stmt = $conn->prepare("UPDATE administrasi SET status = ?, tgl_ubah = ? WHERE id_administrasi = ?");
+		$stmt->bind_param("ssi", $newStatus, $tgl_ubah, $id_administrasi);
+		$stmt->execute();
+		$stmt->close();
 	}
 
-	// Hapus Data
-	if (isset($_GET['hapusData'])) {
-		$id = $_GET['hapusData'];
+	$_SESSION['alert'] = '
+        <div class="alert alert-success alert-has-icon" id="alert">
+            <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+            <div class="alert-body">
+                <button class="close" data-dismiss="alert"><span>×</span></button>
+                <div class="alert-title">Berhasil</div>
+                Status pembayaran telah diperbarui.
+            </div>
+        </div>';
 
-		$query = mysqli_query($conn, "DELETE FROM administrasi WHERE id_administrasi = '$id'");
-
-		if($query) {
-			$_SESSION['alert'] = '<div class="alert alert-success alert-has-icon" id="alert">
-			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
-			                        <div class="alert-body">
-			                          <button class="close" data-dismiss="alert">
-			                            <span>×</span>
-			                          </button>
-			                          <div class="alert-title">Berhasil</div>
-			                          Data berhasil dihapus.
-			                        </div>
-			                      </div>';
-			header('Location: ../../view/user/tampilData.php');
-		} else {
-			$_SESSION['alert'] = '<div class="alert alert-danger alert-has-icon" id="alert">
-			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
-			                        <div class="alert-body">
-			                          <button class="close" data-dismiss="alert">
-			                            <span>×</span>
-			                          </button>
-			                          <div class="alert-title">Gagal</div>
-			                          Data gagal dihapus.
-			                        </div>
-			                      </div>';
-			header('Location: ../../view/administrasi/tampilData.php');
-		}
-	}
+	header('Location: ../../view/administrasi/tampilData.php');
+	exit;
+}
 
 ?>
