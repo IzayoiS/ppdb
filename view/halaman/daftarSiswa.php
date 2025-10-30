@@ -215,7 +215,7 @@ $title = "Pendaftaran Peserta Didik Baru"; // Judulnya
 												</a>
 												<p class="text-muted mt-2"><small>Klik tombol di atas untuk menghubungi admin via WhatsApp.</small></p>
 											<?php else: ?>
-												<div class="alert alert-light border text-center mt-3">
+												<div class="text-center mt-3">
 													<i class="fas fa-check-circle fa-2x text-success mb-2"></i>
 													<h5 class="text-success">Pembayaran Telah Dikonfirmasi!</h5>
 													<p class="text-muted">Anda dapat melanjutkan ke proses selanjutnya.</p>
