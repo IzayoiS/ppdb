@@ -108,27 +108,39 @@ if (isset($_GET['hapusData'])) {
 	header('Location: ../../view/administrasi/tampilData.php');
 	exit;
 }
-// Update Status Lunas
+
+// === UPDATE LUNAS ===
 if (isset($_POST['updateLunas'])) {
-	$id = $_POST['id_administrasi'];
-	$nominal = $_POST['nominal'];
-	$tgl_ubah = date('Y-m-d H:i:s');
+    $id = $_POST['id_administrasi'];
+    $id_identitas_siswa = $_POST['id_identitas_siswa'];
+    $nominal = $_POST['nominal'];
+    $tgl_ubah = date('Y-m-d H:i:s');
 
-	if (empty($id)) {
-		// Buat data baru jika belum ada
-		$stmt = $conn->prepare("INSERT INTO administrasi (id_identitas_siswa, harga, status, tgl_buat, tgl_ubah) VALUES (?, ?, 'Lunas', ?, ?)");
-		$stmt->bind_param("idss", $_POST['id_identitas_siswa'], $nominal, $tgl_ubah, $tgl_ubah);
-		$stmt->execute();
-		$stmt->close();
-	} else {
-		// Update data lama
-		$stmt = $conn->prepare("UPDATE administrasi SET harga = ?, status = 'Lunas', tgl_ubah = ? WHERE id_administrasi = ?");
-		$stmt->bind_param("dsi", $nominal, $tgl_ubah, $id);
-		$stmt->execute();
-		$stmt->close();
-	}
+    if (empty($id)) {
+        // Buat data baru jika belum ada
+        $stmt = $conn->prepare("INSERT INTO administrasi (id_identitas_siswa, harga, status, tgl_buat, tgl_ubah) 
+                                VALUES (?, ?, 'Lunas', ?, ?)");
+        $stmt->bind_param("idss", $id_identitas_siswa, $nominal, $tgl_ubah, $tgl_ubah);
+        $stmt->execute();
+        $stmt->close();
+    } else {
+        // Update data lama
+        $stmt = $conn->prepare("UPDATE administrasi SET harga = ?, status = 'Lunas', tgl_ubah = ? 
+                                WHERE id_administrasi = ?");
+        $stmt->bind_param("dsi", $nominal, $tgl_ubah, $id);
+        $stmt->execute();
+        $stmt->close();
+    }
 
-	$_SESSION['alert'] = '
+    // === Update status administrasi di tabel identitas_siswa ===
+    $stmt2 = $conn->prepare("UPDATE identitas_siswa 
+                             SET status_administrasi = 1, tgl_ubah = ? 
+                             WHERE Id_Identitas_Siswa = ?");
+    $stmt2->bind_param("si", $tgl_ubah, $id_identitas_siswa);
+    $stmt2->execute();
+    $stmt2->close();
+
+    $_SESSION['alert'] = '
         <div class="alert alert-success alert-has-icon" id="alert">
             <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
             <div class="alert-body">
@@ -137,44 +149,60 @@ if (isset($_POST['updateLunas'])) {
                 Status pembayaran telah dilunasi.
             </div>
         </div>';
-
-	header('Location: ../../view/administrasi/tampilData.php');
-	exit;
+    header('Location: ../../view/administrasi/tampilData.php');
+    exit;
 }
 
-// Toggle status lunas <-> belum lunas
+// === TOGGLE STATUS LUNAS / BELUM LUNAS ===
 if (isset($_POST['toggleLunas'])) {
-	$id_administrasi = $_POST['id_administrasi'];
-	$id_identitas_siswa = $_POST['id_identitas_siswa'];
-	$tgl_ubah = date('Y-m-d H:i:s');
+    $id_administrasi = $_POST['id_administrasi'];
+    $id_identitas_siswa = $_POST['id_identitas_siswa'];
+    $tgl_ubah = date('Y-m-d H:i:s');
 
-	// Ambil status sekarang
-	$statusNow = null;
-	if (!empty($id_administrasi)) {
-		$result = $conn->query("SELECT status FROM administrasi WHERE id_administrasi = '$id_administrasi'");
-		if ($result && $result->num_rows > 0) {
-			$row = $result->fetch_assoc();
-			$statusNow = $row['status'];
-		}
-	}
+    // Ambil status sekarang
+    $statusNow = null;
+    if (!empty($id_administrasi)) {
+        $result = $conn->query("SELECT status FROM administrasi WHERE id_administrasi = '$id_administrasi'");
+        if ($result && $result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            $statusNow = $row['status'];
+        }
+    }
 
-	if (empty($id_administrasi)) {
-		// Jika belum ada data administrasi → buat baru langsung Lunas
-		$stmt = $conn->prepare("INSERT INTO administrasi (id_identitas_siswa, harga, status, tgl_buat, tgl_ubah)
+    if (empty($id_administrasi)) {
+        // Jika belum ada data administrasi → buat baru langsung Lunas
+        $stmt = $conn->prepare("INSERT INTO administrasi (id_identitas_siswa, harga, status, tgl_buat, tgl_ubah)
                                 VALUES (?, 0, 'Lunas', ?, ?)");
-		$stmt->bind_param("iss", $id_identitas_siswa, $tgl_ubah, $tgl_ubah);
-		$stmt->execute();
-		$stmt->close();
-	} else {
-		// Jika sudah ada, toggle status
-		$newStatus = ($statusNow == 'Lunas') ? 'Belum Lunas' : 'Lunas';
-		$stmt = $conn->prepare("UPDATE administrasi SET status = ?, tgl_ubah = ? WHERE id_administrasi = ?");
-		$stmt->bind_param("ssi", $newStatus, $tgl_ubah, $id_administrasi);
-		$stmt->execute();
-		$stmt->close();
-	}
+        $stmt->bind_param("iss", $id_identitas_siswa, $tgl_ubah, $tgl_ubah);
+        $stmt->execute();
+        $stmt->close();
 
-	$_SESSION['alert'] = '
+        // Update identitas_siswa jadi Lunas
+        $stmt2 = $conn->prepare("UPDATE identitas_siswa 
+                                 SET status_administrasi = 1, tgl_ubah = ? 
+                                 WHERE Id_Identitas_Siswa = ?");
+        $stmt2->bind_param("si", $tgl_ubah, $id_identitas_siswa);
+        $stmt2->execute();
+        $stmt2->close();
+    } else {
+        // Toggle status
+        $newStatus = ($statusNow == 'Lunas') ? 'Belum Lunas' : 'Lunas';
+        $stmt = $conn->prepare("UPDATE administrasi SET status = ?, tgl_ubah = ? WHERE id_administrasi = ?");
+        $stmt->bind_param("ssi", $newStatus, $tgl_ubah, $id_administrasi);
+        $stmt->execute();
+        $stmt->close();
+
+        // Update identitas_siswa juga
+        $statusAdm = ($newStatus == 'Lunas') ? 1 : 0;
+        $stmt2 = $conn->prepare("UPDATE identitas_siswa 
+                                 SET status_administrasi = ?, tgl_ubah = ? 
+                                 WHERE Id_Identitas_Siswa = ?");
+        $stmt2->bind_param("isi", $statusAdm, $tgl_ubah, $id_identitas_siswa);
+        $stmt2->execute();
+        $stmt2->close();
+    }
+
+    $_SESSION['alert'] = '
         <div class="alert alert-success alert-has-icon" id="alert">
             <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
             <div class="alert-body">
@@ -183,9 +211,9 @@ if (isset($_POST['toggleLunas'])) {
                 Status pembayaran telah diperbarui.
             </div>
         </div>';
-
-	header('Location: ../../view/administrasi/tampilData.php');
-	exit;
+    header('Location: ../../view/administrasi/tampilData.php');
+    exit;
 }
+
 
 ?>
