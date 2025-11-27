@@ -4,6 +4,15 @@
   require("../template/header.php"); // include headernya
 
   include('../../config/connection.php'); // database
+
+  $tahun_query = mysqli_query($conn, "SELECT DISTINCT tahun_ajaran FROM identitas_siswa WHERE tahun_ajaran IS NOT NULL ORDER BY tahun_ajaran DESC");
+  $tahun_options = [];
+  while ($row = mysqli_fetch_assoc($tahun_query)) {
+    $tahun_options[] = $row['tahun_ajaran'];
+  }
+
+  $tahun_sekarang = date('Y') . '/' . (date('Y') + 1);
+  $tahun_selected = isset($_GET['tahun']) ? $_GET['tahun'] : $tahun_sekarang;
 ?>
 
 
@@ -21,6 +30,24 @@
       unset($_SESSION['alert']);
     }
   ?>
+
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <form method="GET" class="form-inline">
+        <div class="form-group w-100">
+          <label for="tahun" class="mr-2">Filter Tahun Pelajaran:</label>
+          <select name="tahun" id="tahun" class="form-control w-75" onchange="this.form.submit()">
+            <option value="">-- Pilih Tahun --</option>
+            <?php foreach ($tahun_options as $tahun): ?>
+              <option value="<?= $tahun ?>" <?= $tahun_selected == $tahun ? 'selected' : '' ?>>
+                <?= $tahun ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <div class="row">
     <div class="col-lg-3 col-md-6 col-sm-6 col-12">
@@ -60,10 +87,10 @@
         </div>
         <div class="card-wrap">
           <div class="card-header">
-            <h4>Total Pendaftar Tahun ini</h4>
+            <h4>Total Pendaftar Tahun <?= htmlspecialchars($tahun_selected) ?></h4>
           </div>
           <div class="card-body">
-            <?= mysqli_num_rows(mysqli_query($conn, "SELECT tgl_buat FROM identitas_siswa WHERE DATE_FORMAT(tgl_buat, 'Y') = DATE_FORMAT(NOW(), 'Y')")); ?>
+            <?= mysqli_num_rows(mysqli_query($conn, "SELECT Id_Identitas_Siswa FROM identitas_siswa WHERE tahun_ajaran = '$tahun_selected'")); ?>
           </div>
         </div>
       </div>
