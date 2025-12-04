@@ -2,14 +2,14 @@
 <?php
 session_start();
 // Cek login dan status pembayaran
-if (!isset($_SESSION['namaPeserta'])) {
+if (!isset($_SESSION['noTelpPeserta'])) {
     header('Location: daftarSiswa.php');
     exit();
 }
 
 include('../../config/connection.php');
-$nisn = $_SESSION['nisnPeserta'];
-$query = mysqli_query($conn, "SELECT status_administrasi FROM identitas_siswa WHERE NISN = '$nisn'");
+$no_telp = $_SESSION['noTelpPeserta'];
+$query = mysqli_query($conn, "SELECT * FROM identitas_siswa WHERE no_telepon = '$no_telp'");
 $data = mysqli_fetch_assoc($query);
 
 // Jika belum bayar, redirect ke halaman pembayaran
@@ -97,12 +97,13 @@ $title = "Dashboard Siswa";
                             <ul class="dropdown-menu">
                                 <li class="active"><a class="nav-link" href="dashboard.php">Data Siswa</a></li>
                                 <li><a class="nav-link" href="daftarOrtu.php">Data Orang Tua</a></li>
+                                <li><a class="nav-link" href="nilaiRapor.php">Nilai</a></li>
                             </ul>
                         </li>
                     </ul>
                     <div class="mt-4 mb-4 p-3 hide-sidebar-mini">
                         <button class="btn btn-primary btn-lg btn-block btn-icon-split"
-                            onclick="cetak(<?= $_SESSION['nisnPeserta']; ?>)">
+                            onclick="cetak(<?= $_SESSION['noTelpPeserta']; ?>)">
                             <i class="fas fa-sign-out-alt"></i> Cetak Kartu Peserta
                         </button>
                     </div>
@@ -126,20 +127,13 @@ $title = "Dashboard Siswa";
                     <div class="section-body">
                         <div class="row">
                             <?php
-                                $jurusan_list = ['TKJT', 'PPLG'];
-                                
-                                foreach ($jurusan_list as $jurusan) {
-                                    $query_kuota = mysqli_query($conn, "SELECT kuota_total, kuota_terisi FROM setting_kuota WHERE jurusan = '$jurusan'");
-                                    $row_kuota = mysqli_fetch_assoc($query_kuota);
-                                    
-                                    if ($row_kuota) {
-                                        $kuota_terisi = $row_kuota['kuota_terisi'];
-                                        $kuota_total = $row_kuota['kuota_total'];
-                                        $persentase = $kuota_total > 0 ? round(($kuota_terisi / $kuota_total) * 100) : 0;
-                                        
-                                        $bg_color = 'bg-primary';
-                                        $status_text = 'Tersedia';
-                                        
+                            $query_jurusan = mysqli_query($conn, "SELECT * FROM setting_kuota ORDER BY jurusan ASC");
+
+                            while ($jurusan = mysqli_fetch_assoc($query_jurusan)) {
+
+                                $kuota_terisi = $jurusan['kuota_terisi'];
+                                $kuota_total = $jurusan['kuota_total'];
+                                $bg_color = 'bg-primary';
                                 ?>
                                 <div class="col-lg-3 col-md-6 col-sm-6 col-12">
                                     <div class="card card-statistic-1">
@@ -148,20 +142,17 @@ $title = "Dashboard Siswa";
                                         </div>
                                         <div class="card-wrap">
                                             <div class="card-header">
-                                                <h4>Kuota <?= $jurusan ?></h4>
+                                                <h4><?= $jurusan['jurusan'] ?></h4>
                                             </div>
                                             <div class="card-body">
                                                 <?= $kuota_terisi ?> / <?= $kuota_total ?>
-                                                <small class="text-<?= $persentase >= 100 ? 'danger' : 'muted' ?>">
-                                                </small>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <?php
-                                    }
-                                }
-                                ?>
+                            <?php
+                            }
+                            ?>
                             <div class="col-12">
                                 <div class="card">
                                     <div class="card-header">
@@ -173,8 +164,8 @@ $title = "Dashboard Siswa";
                                     <div class="card-body">
 
                                         <?php
-                                        $idne = $_SESSION['nisnPeserta'];
-                                        $data = mysqli_query($conn, "SELECT * FROM identitas_siswa WHERE NISN = '$idne'") or die(mysqli_error($conn));
+                                        $no_telp = $_SESSION['noTelpPeserta'];
+                                        $data = mysqli_query($conn, "SELECT * FROM identitas_siswa WHERE no_telepon = '$no_telp'") or die(mysqli_error($conn));
 
                                         if (mysqli_num_rows($data) != 1) {
                                             echo "<script>window.location.href = 'daftarSiswa.php';</script>";
@@ -185,9 +176,34 @@ $title = "Dashboard Siswa";
 
                                             <div class="section-title mt-0 ml-4">Ubah Data Peserta</div>
 
+                                            <?php
+                                            $id_siswa = $row['Id_Identitas_Siswa'];
+                                            $query_dok = mysqli_query($conn, "SELECT * FROM dokumen_siswa WHERE id_siswa = '$id_siswa'");
+                                            $dokumen = [];
+                                            while ($d = mysqli_fetch_assoc($query_dok)) {
+                                                $dokumen[$d['jenis_dokumen']] = $d;
+                                            }
+
+                                            function getDocFile($jenis_doc, $dokumen)
+                                            {
+                                                if (isset($dokumen[$jenis_doc])) {
+                                                    return $dokumen[$jenis_doc]['nama_file'];
+                                                }
+                                                return 'Belum upload';
+                                            }
+
+                                            function getDocPath($jenis_doc, $dokumen)
+                                            {
+                                                if (isset($dokumen[$jenis_doc])) {
+                                                    return $dokumen[$jenis_doc]['path_file'];
+                                                }
+                                                return '#';
+                                            }
+                                            ?>
+                                            
                                             <!-- Form Ubah Data -->
                                             <form class="needs-validation" novalidate=""
-                                                action="../../controller/admin/daftar.php" method="POST">
+                                                action="../../controller/admin/daftar.php" method="POST" enctype="multipart/form-data">
                                                 <div class="modal-body">
                                                     <input type="hidden" name="id"
                                                         value="<?= $row['Id_Identitas_Siswa']; ?>">
@@ -259,16 +275,17 @@ $title = "Dashboard Siswa";
                                                                     $status = $tersisa > 0 ? " (Tersisa: $tersisa)" : " (KUOTA PENUH)";
                                                                     $disabled = $tersisa <= 0 ? "disabled" : "";
                                                                     $selected = $row['jurusan_pilihan'] == $jurusan['jurusan'] ? "selected" : "";
-                                                                    
-                                                                    echo "<option 
-                                                                            value='{$jurusan['jurusan']}' 
-                                                                            data-tersisa='{$tersisa}'
-                                                                            data-total='{$jurusan['kuota_total']}'
-                                                                            data-terisi='{$jurusan['kuota_terisi']}'
-                                                                            $selected $disabled>
-                                                                            {$jurusan['jurusan']}$status
-                                                                        </option>";
-                                                                }
+
+                                                                echo "<option 
+                                                                        value='{$jurusan['jurusan']}' 
+                                                                        data-tersisa='{$tersisa}'
+                                                                        data-total='{$jurusan['kuota_total']}'
+                                                                        data-terisi='{$jurusan['kuota_terisi']}'
+                                                                        $selected $disabled>
+                                                                        {$jurusan['jurusan']}
+                                                                    </option>";
+
+                                                            }
                                                             ?>
                                                         </select>
                                                         <div class="invalid-feedback">Pilih salah satu jurusan</div>
@@ -577,6 +594,171 @@ $title = "Dashboard Siswa";
                                                         <div class="invalid-feedback">Wajib Diisi!</div>
                                                     </div>
 
+                                                    <div class="form-group">
+                                                        <label>Upload KK</label>
+                                                        <input type="file" class="form-control" name="kk">
+                                                        <small class="text-muted">
+                                                            File saat ini: <strong><?= getDocFile('KK', $dokumen) ?></strong>
+                                                            <?php if (isset($dokumen['KK'])): ?>
+                                                                | <a href="<?= getDocPath('KK', $dokumen) ?>" target="_blank" download>
+                                                                    <i class="fas fa-download"></i> Download
+                                                                </a>
+                                                            <?php endif; ?>
+                                                        </small>
+                                                        <div class="valid-feedback">Baguss!</div>
+                                                        <div class="invalid-feedback">Wajib Diisi!</div>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label>Upload Akte Kelahiran</label>
+                                                        <input type="file" class="form-control" name="akte_kelahiran">
+                                                        <small class="text-muted">
+                                                            File saat ini: <strong><?= getDocFile('Akte Kelahiran', $dokumen) ?></strong>
+                                                            <?php if (isset($dokumen['Akte Kelahiran'])): ?>
+                                                                | <a href="<?= getDocPath('Akte Kelahiran', $dokumen) ?>" target="_blank" download>
+                                                                    <i class="fas fa-download"></i> Download
+                                                                </a>
+                                                            <?php endif; ?>
+                                                        </small>
+                                                        <div class="valid-feedback">Baguss!</div>
+                                                        <div class="invalid-feedback">Wajib Diisi!</div>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label>Upload Kartu NISN</label>
+                                                        <input type="file" class="form-control" name="kartu_nisn">
+                                                        <small class="text-muted">
+                                                            File saat ini: <strong><?= getDocFile('Kartu NISN', $dokumen) ?></strong>
+                                                            <?php if (isset($dokumen['Kartu NISN'])): ?>
+                                                                | <a href="<?= getDocPath('Kartu NISN', $dokumen) ?>" target="_blank" download>
+                                                                    <i class="fas fa-download"></i> Download
+                                                                </a>
+                                                            <?php endif; ?>
+                                                        </small>
+                                                        <div class="valid-feedback">Baguss!</div>
+                                                        <div class="invalid-feedback">Wajib Diisi!</div>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label>Upload SMP/MTS</label>
+                                                        <input type="file" class="form-control" name="ijazah">
+                                                        <small class="text-muted">
+                                                            File saat ini: <strong><?= getDocFile('Ijazah', $dokumen) ?></strong>
+                                                            <?php if (isset($dokumen['Ijazah'])): ?>
+                                                                | <a href="<?= getDocPath('Ijazah', $dokumen) ?>" target="_blank" download>
+                                                                    <i class="fas fa-download"></i> Download
+                                                                </a>
+                                                            <?php endif; ?>
+                                                        </small>
+                                                        <div class="valid-feedback">Baguss!</div>
+                                                        <div class="invalid-feedback">Wajib Diisi!</div>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label>Upload KTP Orang Tua / Wali</label>
+                                                        <input type="file" class="form-control" name="ktp_orang_tua">
+                                                        <small class="text-muted">
+                                                            File saat ini: <strong><?= getDocFile('KTP Orang Tua', $dokumen) ?></strong>
+                                                            <?php if (isset($dokumen['KTP Orang Tua'])): ?>
+                                                                | <a href="<?= getDocPath('KTP Orang Tua', $dokumen) ?>" target="_blank" download>
+                                                                    <i class="fas fa-download"></i> Download
+                                                                </a>
+                                                            <?php endif; ?>
+                                                        </small>
+                                                        <div class="valid-feedback">Baguss!</div>
+                                                        <div class="invalid-feedback">Wajib Diisi!</div>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label>Upload Pas Foto</label>
+                                                        <input type="file" class="form-control" name="pas_foto">
+                                                        <small class="text-muted">
+                                                            File saat ini: <strong><?= getDocFile('Pas Foto', $dokumen) ?></strong>
+                                                            <?php if (isset($dokumen['Pas Foto'])): ?>
+                                                                | <a href="<?= getDocPath('Pas Foto', $dokumen) ?>" target="_blank" download>
+                                                                    <i class="fas fa-download"></i> Download
+                                                                </a>
+                                                            <?php endif; ?>
+                                                        </small>
+                                                        <div class="valid-feedback">Baguss!</div>
+                                                        <div class="invalid-feedback">Wajib Diisi!</div>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label>Upload Nilai</label>
+                                                        <input type="file" class="form-control" name="pas_foto">
+                                                        <small class="text-muted">
+                                                            File saat ini: <strong><?= getDocFile('Pas Foto', $dokumen) ?></strong>
+                                                            <?php if (isset($dokumen['Pas Foto'])): ?>
+                                                                | <a href="<?= getDocPath('Pas Foto', $dokumen) ?>" target="_blank" download>
+                                                                    <i class="fas fa-download"></i> Download
+                                                                </a>
+                                                            <?php endif; ?>
+                                                        </small>
+                                                        <div class="valid-feedback">Baguss!</div>
+                                                        <div class="invalid-feedback">Wajib Diisi!</div>
+                                                    </div>
+                                                    
+                                                    <div class="form-section mt-4">
+                                                        <small class="text-muted ml-4 d-block mb-3">Semester 1-6 | Nilai dari 5 mata pelajaran utama</small>
+
+                                                        <!-- Hidden input untuk data dari database -->
+                                                        <input type="hidden" id="nilai-dari-db" value='<?php 
+                                                            $id_siswa = $row['Id_Identitas_Siswa'] ?? '';
+                                                            if ($id_siswa) {
+                                                                $query = mysqli_query($conn, "SELECT * FROM nilai_rapor WHERE id_siswa = '$id_siswa'");
+                                                                $nilai_array = [];
+                                                                while ($rowNilai = mysqli_fetch_assoc($query)) {
+                                                                    $nilai_array[] = $rowNilai;
+                                                                }
+                                                                echo json_encode($nilai_array);
+                                                            } else {
+                                                                echo '[]';
+                                                            }
+                                                        ?>'>
+
+                                                        <!-- Form Nilai Per Semester -->
+                                                        <div id="nilai-semester-container" class="ml-4 mr-4">
+                                                            <!-- Semester cards akan di-generate oleh JavaScript -->
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-section mt-4">
+                                                        <small class="text-muted ml-4 d-block mb-3">Semester 1-6 | Nilai dari 5 mata pelajaran utama</small>
+
+                                                        <!-- Hidden input untuk data dari database -->
+                                                        <input type="hidden" id="nilai-dari-db" value='<?php 
+                                                            $id_siswa = $_POST['id'] ?? $_SESSION['idPeserta'] ?? '';
+                                                            if ($id_siswa) {
+                                                                $query = mysqli_query($conn, "SELECT * FROM nilai_rapor WHERE id_siswa = '$id_siswa'");
+                                                                $nilai_array = [];
+                                                                while ($row = mysqli_fetch_assoc($query)) {
+                                                                    $nilai_array[] = $row;
+                                                                }
+                                                                echo json_encode($nilai_array);
+                                                            } else {
+                                                                echo '[]';
+                                                            }
+                                                        ?>'>
+
+                                                        <!-- Tabel Nilai Rapor -->
+                                                        <div class="table-responsive ml-4 mr-4">
+                                                            <table class="table table-bordered" id="tabel-nilai-rapor">
+                                                                <thead class="bg-light">
+                                                                    <tr>
+                                                                        <th style="width: 15%;">Semester</th>
+                                                                        <th style="width: 35%;">Mata Pelajaran</th>
+                                                                        <th style="width: 20%;">Nilai</th>
+                                                                        <th style="width: 30%;">Status</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="tbody-nilai-rapor">
+                                                                    <!-- Form akan di-generate oleh JavaScript -->
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+
                                                     <div class="modal-footer bg-whitesmoke br">
                                                         <button class="btn btn-primary" name="ubahDataSiswa">Simpan</button>
                                                     </div>
@@ -672,6 +854,86 @@ $title = "Dashboard Siswa";
                 });
         }
 
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('nilai-semester-container');
+            const nilaiDbInput = document.getElementById('nilai-dari-db');
+            
+            let nilaiDatabase = [];
+
+            // Parse data dari database
+            try {
+                nilaiDatabase = JSON.parse(nilaiDbInput.value || '[]');
+            } catch (e) {
+                nilaiDatabase = [];
+            }
+
+            // Daftar mata pelajaran
+            const mataPelajaranList = [
+                'Pendidikan Agama',
+                'Pendidikan Kewarganegaraan',
+                'Bahasa Indonesia',
+                'Bahasa Inggris',
+                'Matematika'
+            ];
+
+            // Cari nilai dari database
+            function findNilaiFromDb(semester, mataPelajaran) {
+                const found = nilaiDatabase.find(item => 
+                    item.semester == semester && item.mata_pelajaran == mataPelajaran
+                );
+                return found ? found.nilai : '';
+            }
+
+            // Generate form untuk setiap semester
+            for (let semester = 1; semester <= 6; semester++) {
+                // Buat heading semester
+                const semesterHeading = document.createElement('h5');
+                semesterHeading.style.marginTop = '30px';
+                semesterHeading.innerHTML = `<span class="badge badge-primary">Semester ${semester}</span>`;
+                container.appendChild(semesterHeading);
+
+                // Generate form group untuk setiap mata pelajaran
+                mataPelajaranList.forEach((mataPelajaran) => {
+                    const nilaiDariDb = findNilaiFromDb(semester, mataPelajaran);
+
+                    const formGroup = document.createElement('div');
+                    formGroup.className = 'form-group';
+                    formGroup.innerHTML = `
+                        <label>${mataPelajaran}</label>
+                        <input type="number" 
+                            class="form-control" 
+                            name="nilai_semester_${semester}[]"
+                            data-semester="${semester}"
+                            data-mata-pelajaran="${mataPelajaran}"
+                            min="0" 
+                            max="100" 
+                            value="${nilaiDariDb}"
+                            placeholder="Masukkan nilai (0-100)">
+                        <small class="form-text text-muted">
+                            ${nilaiDariDb ? '✓ Tersimpan' : 'Belum diisi'}
+                        </small>
+                    `;
+
+                    container.appendChild(formGroup);
+
+                    // Attach event listener untuk perubahan nilai
+                    const input = formGroup.querySelector('input');
+                    input.addEventListener('change', function() {
+                        const small = formGroup.querySelector('small');
+                        if (this.value) {
+                            small.textContent = '✓ Tersimpan';
+                            small.className = 'form-text text-success';
+                        } else {
+                            small.textContent = 'Belum diisi';
+                            small.className = 'form-text text-muted';
+                        }
+                    });
+                });
+            }
+        });
+
+
+
         // Cek kuota saat halaman dimuat
         document.addEventListener('DOMContentLoaded', function() {
             const jurusanSelect = document.getElementById('jurusan_pilihan');
@@ -679,6 +941,287 @@ $title = "Dashboard Siswa";
                 cekKuota(jurusanSelect.value);
             }
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('nilai-rapor-container');
+            const tambahBtn = document.getElementById('tambah-nilai-btn');
+            const nilaiDbInput = document.getElementById('nilai-dari-db');
+            
+            let nilaiCount = 0;
+            let nilaiDatabase = [];
+
+            // Parse data dari database
+            try {
+                nilaiDatabase = JSON.parse(nilaiDbInput.value || '[]');
+            } catch (e) {
+                nilaiDatabase = [];
+            }
+
+            // Template form nilai rapor
+            function createNilaiForm(index, semester = '', mataPelajaran = '', nilai = '') {
+                return `
+                    <div class="nilai-rapor-item" data-index="${index}">
+                        <button type="button" class="btn btn-sm btn-danger btn-hapus-nilai">
+                            <i class="fas fa-trash"></i> Hapus
+                        </button>
+                        
+                        <div class="form-row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Semester</label>
+                                    <select class="form-control form-control-sm semester-select" name="semester[]" required>
+                                        <option value="">-- Pilih Semester --</option>
+                                        <option value="1" ${semester == '1' ? 'selected' : ''}>Semester 1</option>
+                                        <option value="2" ${semester == '2' ? 'selected' : ''}>Semester 2</option>
+                                        <option value="3" ${semester == '3' ? 'selected' : ''}>Semester 3</option>
+                                        <option value="4" ${semester == '4' ? 'selected' : ''}>Semester 4</option>
+                                        <option value="5" ${semester == '5' ? 'selected' : ''}>Semester 5</option>
+                                        <option value="6" ${semester == '6' ? 'selected' : ''}>Semester 6</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Mata Pelajaran</label>
+                                    <select class="form-control form-control-sm mata-pelajaran-select" name="mata_pelajaran[]" required>
+                                        <option value="">-- Pilih Mata Pelajaran --</option>
+                                        <option value="Pendidikan Agama" ${mataPelajaran == 'Pendidikan Agama' ? 'selected' : ''}>Pendidikan Agama</option>
+                                        <option value="Pendidikan Kewarganegaraan" ${mataPelajaran == 'Pendidikan Kewarganegaraan' ? 'selected' : ''}>Pendidikan Kewarganegaraan</option>
+                                        <option value="Bahasa Indonesia" ${mataPelajaran == 'Bahasa Indonesia' ? 'selected' : ''}>Bahasa Indonesia</option>
+                                        <option value="Bahasa Inggris" ${mataPelajaran == 'Bahasa Inggris' ? 'selected' : ''}>Bahasa Inggris</option>
+                                        <option value="Matematika" ${mataPelajaran == 'Matematika' ? 'selected' : ''}>Matematika</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Nilai <span class="nilai-info"></span></label>
+                                    <input type="number" class="form-control form-control-sm nilai-input" 
+                                        name="nilai[]" min="0" max="100" required 
+                                        placeholder="0-100" value="${nilai}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Cari nilai dari database berdasarkan semester dan mata pelajaran
+            function findNilaiFromDb(semester, mataPelajaran) {
+                const found = nilaiDatabase.find(item => 
+                    item.semester == semester && item.mata_pelajaran == mataPelajaran
+                );
+                return found ? found.nilai : null;
+            }
+
+            // Update nilai otomatis saat semester atau mata pelajaran berubah
+            function attachChangeListener(item) {
+                const semesterSelect = item.querySelector('.semester-select');
+                const mataPelajaranSelect = item.querySelector('.mata-pelajaran-select');
+                const nilaiInput = item.querySelector('.nilai-input');
+                const nilaiInfo = item.querySelector('.nilai-info');
+
+                function updateNilai() {
+                    const semester = semesterSelect.value;
+                    const mataPelajaran = mataPelajaranSelect.value;
+
+                    if (semester && mataPelajaran) {
+                        const nilaiDariDb = findNilaiFromDb(semester, mataPelajaran);
+                        
+                        if (nilaiDariDb) {
+                            nilaiInput.value = nilaiDariDb;
+                            nilaiInfo.innerHTML = `<span class="nilai-badge">✓ Ada di database</span>`;
+                            item.classList.add('nilai-found');
+                        } else {
+                            nilaiInput.value = '';
+                            nilaiInfo.innerHTML = '';
+                            item.classList.remove('nilai-found');
+                        }
+                    } else {
+                        nilaiInput.value = '';
+                        nilaiInfo.innerHTML = '';
+                    }
+                }
+
+                semesterSelect.addEventListener('change', updateNilai);
+                mataPelajaranSelect.addEventListener('change', updateNilai);
+            }
+
+            // Tambah form nilai
+            function addNilaiForm(semester = '', mataPelajaran = '', nilai = '') {
+                container.insertAdjacentHTML('beforeend', createNilaiForm(nilaiCount, semester, mataPelajaran, nilai));
+                nilaiCount++;
+                attachHapusListener();
+                
+                // Attach change listener ke form baru
+                const items = container.querySelectorAll('.nilai-rapor-item');
+                const lastItem = items[items.length - 1];
+                attachChangeListener(lastItem);
+            }
+
+            // Attach listener untuk tombol hapus
+            function attachHapusListener() {
+                const hapusButtons = container.querySelectorAll('.btn-hapus-nilai');
+                hapusButtons.forEach((btn, index) => {
+                    // Remove event listener lama
+                    const newBtn = btn.cloneNode(true);
+                    btn.parentNode.replaceChild(newBtn, btn);
+                    
+                    // Attach event listener baru
+                    newBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const item = this.closest('.nilai-rapor-item');
+                        item.style.animation = 'fadeOut 0.3s ease';
+                        setTimeout(() => item.remove(), 300);
+                    });
+                });
+            }
+
+            // Load data dari database ke form
+            function loadNilaiFromDatabase() {
+                if (nilaiDatabase.length > 0) {
+                    // Jika ada data di database, tampilkan data tersebut
+                    nilaiDatabase.forEach(item => {
+                        addNilaiForm(item.semester, item.mata_pelajaran, item.nilai);
+                    });
+                } else {
+                    // Jika tidak ada data, tampilkan 1 form kosong
+                    addNilaiForm();
+                }
+            }
+
+            // Event listener untuk tombol tambah
+            tambahBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Validasi form sebelumnya
+                const items = container.querySelectorAll('.nilai-rapor-item');
+                let isValid = true;
+
+                items.forEach(item => {
+                    const semester = item.querySelector('[name="semester[]"]').value;
+                    const mataPelajaran = item.querySelector('[name="mata_pelajaran[]"]').value;
+                    const nilai = item.querySelector('[name="nilai[]"]').value;
+
+                    if (!semester || !mataPelajaran || !nilai) {
+                        isValid = false;
+                    }
+                });
+
+                if (items.length > 0 && !isValid) {
+                    alert('Mohon lengkapi semua field yang sudah ada terlebih dahulu!');
+                    return;
+                }
+
+                addNilaiForm();
+            });
+
+            // Load data saat halaman load
+            loadNilaiFromDatabase();
+
+            // CSS untuk animasi
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeOut {
+                    from {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                    to {
+                        opacity: 0;
+                        transform: translateX(-10px);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+    const tbody = document.getElementById('tbody-nilai-rapor');
+    const nilaiDbInput = document.getElementById('nilai-dari-db');
+    
+    let nilaiDatabase = [];
+
+    // Parse data dari database
+    try {
+        nilaiDatabase = JSON.parse(nilaiDbInput.value || '[]');
+    } catch (e) {
+        nilaiDatabase = [];
+    }
+
+    // Daftar mata pelajaran
+    const mataPelajaranList = [
+        'Pendidikan Agama',
+        'Pendidikan Kewarganegaraan',
+        'Bahasa Indonesia',
+        'Bahasa Inggris',
+        'Matematika'
+    ];
+
+    // Cari nilai dari database
+    function findNilaiFromDb(semester, mataPelajaran) {
+        const found = nilaiDatabase.find(item => 
+            item.semester == semester && item.mata_pelajaran == mataPelajaran
+        );
+        return found ? found.nilai : '';
+    }
+
+    // Generate form berdasarkan semester dan mata pelajaran
+    function generateForm() {
+        tbody.innerHTML = '';
+
+        for (let semester = 1; semester <= 6; semester++) {
+            mataPelajaranList.forEach((mataPelajaran, index) => {
+                const nilaiDariDb = findNilaiFromDb(semester, mataPelajaran);
+                const isAdaDatabase = nilaiDariDb !== '';
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <strong>Semester ${semester}</strong>
+                    </td>
+                    <td>
+                        <input type="hidden" name="semester[]" value="${semester}">
+                        <input type="hidden" name="mata_pelajaran[]" value="${mataPelajaran}">
+                        <span>${mataPelajaran}</span>
+                    </td>
+                    <td>
+                        <input type="number" class="nilai-input" name="nilai[]" 
+                               min="0" max="100" value="${nilaiDariDb}" 
+                               placeholder="0-100" required>
+                    </td>
+                    <td>
+                        <span class="status-badge ${isAdaDatabase ? 'status-ada' : 'status-baru'}">
+                            ${isAdaDatabase ? '✓ Tersimpan' : '+ Baru'}
+                        </span>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+
+                // Attach listener untuk perubahan nilai
+                const nilaiInput = row.querySelector('.nilai-input');
+                nilaiInput.addEventListener('change', function() {
+                    const statusBadge = row.querySelector('.status-badge');
+                    if (this.value !== nilaiDariDb) {
+                        statusBadge.textContent = '✏ Diubah';
+                        statusBadge.className = 'status-badge' + ' cce5ff';
+                        row.classList.add('row-updated');
+                    } else {
+                        statusBadge.textContent = '✓ Tersimpan';
+                        statusBadge.className = 'status-badge status-ada';
+                        row.classList.remove('row-updated');
+                    }
+                });
+            });
+        }
+    }
+
+    // Generate form saat halaman load
+    generateForm();
+});
 
     </script>
 </body>
