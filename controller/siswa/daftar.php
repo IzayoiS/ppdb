@@ -93,37 +93,35 @@ if (isset($_POST['tambahDataSiswa'])) {
 
 // Login Siswa
 if (isset($_POST['loginSiswa'])) {
-    $nisn = mysqli_real_escape_string($conn, $_POST['nisn']);
-    $tanggal_lahir = mysqli_real_escape_string($conn, $_POST['tanggal_lahir']);
+  $no_telepon = mysqli_real_escape_string($conn, $_POST['no_telepon']);
+  $tanggal_lahir = mysqli_real_escape_string($conn, $_POST['tanggal_lahir']);
 
-    $query = mysqli_query($conn, "SELECT * FROM identitas_siswa WHERE NISN = '$nisn' AND Tanggal_Lahir = '$tanggal_lahir'") or die(mysqli_error($conn));
+  $query = mysqli_query($conn, "SELECT * FROM identitas_siswa WHERE no_telepon = '$no_telepon' AND Tanggal_Lahir = '$tanggal_lahir'");
 
-    if (mysqli_num_rows($query) > 0) {
-        foreach ($query as $row) {
-            $_SESSION['nisnPeserta'] = $nisn;        
-            $_SESSION['namaPeserta'] = $row['Nama_Peserta_Didik']; 
-            $_SESSION['tlPeserta'] = $tanggal_lahir;
-            $_SESSION['status_pembayaran'] = ($row['status_administrasi'] == 1) ? 'Lunas' : 'Belum Lunas';
+  if (mysqli_num_rows($query) > 0) {
+    $row = mysqli_fetch_assoc($query);
+    $_SESSION['noTelpPeserta'] = $no_telepon;
+    $_SESSION['namaPeserta'] = $row['Nama_Peserta_Didik'];
+    $_SESSION['tlPeserta'] = $tanggal_lahir;
+    $_SESSION['idPeserta'] = $row['Id_Identitas_Siswa'];
+    $_SESSION['status_administrasi'] = $row['status_administrasi'];
 
-            header('Location: ../../view/halaman/daftarSiswa.php');
-        }
-    } else {
-        $_SESSION['alert'] = '<div class="alert alert-danger alert-has-icon" id="alert">
-                                    <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
-                                    <div class="alert-body">
-                                      <button class="close" data-dismiss="alert">
-                                        <span>×</span>
-                                      </button>
-                                      <div class="alert-title">Login Gagal</div>
-                                      NISN dan Tanggal Lahir tidak cocok.
-                                    </div>
-                                  </div>';
-        header('Location: ../../view/siswa/login.php');
-    }
+    header('Location: ../../view/halaman/daftarSiswa.php');
+  } else {
+    $_SESSION['alert'] = '<div class="alert alert-danger alert-has-icon">
+            <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+            <div class="alert-body">
+              <button class="close" data-dismiss="alert"><span>×</span></button>
+              <div class="alert-title">Login Gagal</div>
+              Nomor Telepon dan Tanggal Lahir tidak cocok.
+            </div>
+           </div>';
+    header('Location: ../../view/siswa/login.php');
+  }
 }
 
 // Logout Siswa
 if (isset($_GET['logout'])) {
-    unset($_SESSION['nisnPeserta'], $_SESSION['namaPeserta'], $_SESSION['tlPeserta'], $_SESSION['status_pembayaran']);
+  unset($_SESSION['noTelpPeserta'], $_SESSION['namaPeserta'], $_SESSION['tlPeserta'], $_SESSION['status_pembayaran']);
 }
 ?>

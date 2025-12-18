@@ -94,6 +94,7 @@
               <li <?php if ($title == "Administrasi") { echo 'class="active"'; } ?>><a class="nav-link" href="../administrasi/tampilData.php"><i class="fas fa-money-bill-alt"></i> <span>Administrasi</span></a></li>
               <li <?php if ($title == "Cetak Kartu") { echo 'class="active"'; } ?>><a class="nav-link" href="../cetak/tampilData.php"><i class="fas fa-file-alt"></i> <span>Cetak Kartu</span></a></li>
               <li <?php if ($title == "Kelola Kuota") { echo 'class="active"'; } ?>><a class="nav-link" href="../administrasi/kelolaKuota.php"><i class="fas fa-chart-pie"></i> <span>Kelola Kuota</span></a></li>
+              <li <?php if ($title == "Dokumen Pendukung") { echo 'class="active"'; } ?>><a class="nav-link" href="../dokumen/tampilData.php"><i class="fas fa-book"></i> <span>Dokumen Pendukung</span></a></li>
 
               <?php if ($_SESSION['hak'] == 'admin') : ?>
               <li <?php if ($title == "Pengguna") { echo 'class="active"'; } ?>><a class="nav-link" href="../user/tampilData.php"><i class="fas fa-users"></i> <span>Pengguna</span></a></li>

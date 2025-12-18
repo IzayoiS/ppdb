@@ -2,15 +2,15 @@
 <?php
 session_start();
 $title = "Dashboard Orang Tua";
-if (!isset($_SESSION['namaPeserta'])) {
+if (!isset($_SESSION['noTelpPeserta'])) {
     echo "<script>window.location.href = 'daftarSiswa.php';</script>";
     die();
 }
 include('../../config/connection.php');
 
 // Ambil data siswa
-$idne = $_SESSION['nisnPeserta'];
-$data_siswa = mysqli_query($conn, "SELECT * FROM identitas_siswa WHERE NISN = '$idne'");
+$no_telp = $_SESSION['noTelpPeserta'];
+$data_siswa = mysqli_query($conn, "SELECT * FROM identitas_siswa WHERE no_telepon = '$no_telp'");
 $row = mysqli_fetch_assoc($data_siswa);
 $status_pembayaran = $row['status_administrasi'];
 
@@ -86,11 +86,12 @@ if ($row['status_ortu'] == 1) {
                             <ul class="dropdown-menu">
                                 <li><a class="nav-link" href="dashboard.php">Data Siswa</a></li>
                                 <li class="active"><a class="nav-link" href="daftarOrtu.php">Data Orang Tua</a></li>
+                                <li><a class="nav-link" href="dokumenPendukung.php">Dokumen Pendukung</a></li>
                             </ul>
                         </li>
                     </ul>
                     <div class="mt-4 mb-4 p-3 hide-sidebar-mini">
-                        <button class="btn btn-primary btn-lg btn-block btn-icon-split" onclick="cetak(<?= $_SESSION['nisnPeserta']; ?>)">
+                        <button class="btn btn-primary btn-lg btn-block btn-icon-split" onclick="cetak(<?= $_SESSION['noTelpPeserta']; ?>)">
                             <i class="fas fa-print"></i> Cetak Kartu Peserta
                         </button>
                     </div>

@@ -37,7 +37,7 @@
               <table class="table table-striped" id="table-1">
                 <thead>
                   <tr>
-                    <th class="text-center"> # </th>
+                    <th class="text-center"> ID Siswa </th>
                     <th>NISN</th>
                     <th>Nama Lengkap</th>
                     <th>Tanggal Lahir</th>
@@ -55,7 +55,7 @@
                     foreach ($data as $row) { 
                   ?>
                   <tr>
-                  	<td><?= $no++; ?></td>
+                  	<td><?= $row['Id_Identitas_Siswa']; ?></td>
                   	<td><?= $row['NISN']; ?></td>
                   	<td><?= $row['Nama_Peserta_Didik']; ?></td>
                   	<td><?= $row['Tanggal_Lahir']; ?></td>

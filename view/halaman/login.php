@@ -51,10 +51,10 @@
             ?>
             <form method="POST" action="../../controller/admin/daftar.php" class="needs-validation" novalidate="">
               <div class="form-group">
-                <label for="nisn">NISN</label>
-                <input id="nisn" type="number" class="form-control" name="nisn" tabindex="1" required autofocus>
+                <label for="no_telepon">Nomor WhatsApp</label>
+                <input id="no_telepon" type="text" class="form-control" name="no_telepon" tabindex="1" required autofocus>
                 <div class="invalid-feedback">
-                  Masukkan NISN anda!
+                  Masukkan Nomor WhatsApp anda!
                 </div>
               </div>
 

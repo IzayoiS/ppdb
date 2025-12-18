@@ -43,7 +43,7 @@ $title = "Pendaftaran Peserta Didik Baru"; // Judulnya
 		<div class="main-wrapper">
 			<div class="navbar-bg"></div>
 
-			<?php if (isset($_SESSION['namaPeserta'])) { ?>
+			<?php if (isset($_SESSION['noTelpPeserta'])) { ?>
 				<nav class="navbar navbar-expand-lg main-navbar">
 					<form class="form-inline mr-auto">
 						<ul class="navbar-nav mr-3">
@@ -84,13 +84,14 @@ $title = "Pendaftaran Peserta Didik Baru"; // Judulnya
 								<ul class="dropdown-menu">
 									<li class="active"><a class="nav-link" href="dashboard.php">Data Siswa</a></li>
 									<li><a class="nav-link" href="daftarOrtu.php">Data Orang Tua</a></li>
+									<li><a class="nav-link" href="dokumenPendukung.php">Dokumen Pendukung</a></li>
 								</ul>
 							</li>
 						</ul>
 
 						<div class="mt-4 mb-4 p-3 hide-sidebar-mini">
 							<button class="btn btn-primary btn-lg btn-block btn-icon-split"
-								onclick="cetak(<?= $_SESSION['nisnPeserta']; ?>)">
+								onclick="cetak(<?= $_SESSION['noTelpPeserta']; ?>)">
 								<i class="fas fa-sign-out-alt"></i> Cetak Kartu Peserta
 							</button>
 						</div>
@@ -123,28 +124,12 @@ $title = "Pendaftaran Peserta Didik Baru"; // Judulnya
 							</div>
 							<div class="card-body">
 				
-								<?php if (!isset($_SESSION['namaPeserta'])) { ?>
+								<?php if (!isset($_SESSION['noTelpPeserta'])) { ?>
 									<div class="section-title mt-0 ml-4">Data diri peserta</div>
 				
 									<!-- Form Tambah Data Siswa -->
 									<form class="needs-validation" novalidate="" action="../../controller/admin/daftar.php" method="POST">
 										<div class="modal-body">
-											<div class="form-group">
-												<label>NISN</label>
-												<input type="text" class="form-control" name="nisn" required="" minlength="10"
-													maxlength="10">
-												<div class="valid-feedback">Baguss!</div>
-												<div class="invalid-feedback">Wajib 10 kata</div>
-											</div>
-				
-											<div class="form-group">
-												<label>NIK</label>
-												<input type="text" class="form-control" name="nik" required="" minlength="16"
-													maxlength="16">
-												<div class="valid-feedback">Baguss!</div>
-												<div class="invalid-feedback">Wajib 8 kata</div>
-											</div>
-				
 											<div class="form-group">
 												<label>Nama Lengkap Peserta Didik</label>
 												<input type="text" class="form-control" name="nama_lengkap" required="">
@@ -153,7 +138,7 @@ $title = "Pendaftaran Peserta Didik Baru"; // Judulnya
 											</div>
 				
 											<div class="form-group">
-												<label>Nomor Telepon</label>
+												<label>Nomor Telepon (WhatsApp)</label>
 												<input type="text" class="form-control" name="no_telp" required="">
 												<div class="valid-feedback">Baguss!</div>
 												<div class="invalid-feedback">Wajib Diisi!</div>
@@ -181,8 +166,8 @@ $title = "Pendaftaran Peserta Didik Baru"; // Judulnya
 									</form>
 								<?php } else {
 									include('../../config/connection.php');
-									$idne = $_SESSION['nisnPeserta'];
-									$data = mysqli_query($conn, "SELECT * FROM identitas_siswa WHERE NISN = '$idne'");
+									$id_peserta = isset($_SESSION['idPeserta']) ? $_SESSION['idPeserta'] : 0;
+									$data = mysqli_query($conn, "SELECT * FROM identitas_siswa WHERE Id_Identitas_Siswa = '$id_peserta'");
 									$row = mysqli_fetch_assoc($data);
 
 									// Ambil data administrasi
@@ -201,7 +186,7 @@ $title = "Pendaftaran Peserta Didik Baru"; // Judulnya
 													<i class="fas fa-check-circle"></i> Pendaftaran Berhasil!
 												</h4>
 												<p class="text-muted mb-0">
-													Selamat <strong><?= $_SESSION['namaPeserta']; ?></strong>, Anda telah terdaftar sebagai calon siswa.
+													Selamat <strong><?= $_SESSION['noTelpPeserta']; ?></strong>, Anda telah terdaftar sebagai calon siswa.
 												</p>
 												<?php
 												$nama_siswa = $row['Nama_Peserta_Didik'];

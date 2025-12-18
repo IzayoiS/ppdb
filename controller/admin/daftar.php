@@ -5,59 +5,108 @@
 	}
 	include("../../config/connection.php");
 
-	// Tambah Data
+	function uploadFile($file, $id_siswa, $jenis_dokumen, $conn)
+	{
+		$upload_dir = "../../uploads/dokumen_siswa/";
+
+		// Buat folder jika belum ada
+		if (!is_dir($upload_dir)) {
+			mkdir($upload_dir, 0755, true);
+		}
+
+		// Validasi file
+		if ($_FILES[$file]['error'] !== UPLOAD_ERR_OK) {
+			return ['status' => false, 'message' => 'Error upload: ' . $_FILES[$file]['error']];
+		}
+
+		// Validasi ukuran file (max 5MB)
+		if ($_FILES[$file]['size'] > 5242880) {
+			return ['status' => false, 'message' => 'Ukuran file terlalu besar (max 5MB)'];
+		}
+
+		// Validasi tipe file
+		$allowed_types = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+		$finfo = finfo_open(FILEINFO_MIME_TYPE);
+		$mime_type = finfo_file($finfo, $_FILES[$file]['tmp_name']);
+		finfo_close($finfo);
+
+		if (!in_array($mime_type, $allowed_types)) {
+			return ['status' => false, 'message' => 'Tipe file tidak diizinkan'];
+		}
+
+		// Generate nama file unik
+		$ext = pathinfo($_FILES[$file]['name'], PATHINFO_EXTENSION);
+		$filename = $id_siswa . '_' . $jenis_dokumen . '_' . time() . '.' . $ext;
+		$filepath = $upload_dir . $filename;
+
+		// Move file
+		if (move_uploaded_file($_FILES[$file]['tmp_name'], $filepath)) {
+			// Simpan ke database
+			$query = mysqli_query($conn, "INSERT INTO dokumen_siswa 
+				(id_siswa, jenis_dokumen, nama_file, path_file, tgl_upload) 
+				VALUES ('$id_siswa', '$jenis_dokumen', '$filename', '$filepath', NOW())");
+
+			if ($query) {
+				return ['status' => true, 'message' => 'File berhasil diupload'];
+			} else {
+				unlink($filepath); // Hapus file jika gagal simpan ke DB
+				return ['status' => false, 'message' => 'Gagal menyimpan data ke database'];
+			}
+		} else {
+			return ['status' => false, 'message' => 'Gagal memindahkan file'];
+		}
+	}
+
+
+// Tambah Data
 	if (isset($_POST['tambahDataSiswa'])) {
-		$nisn 				= mysqli_real_escape_string($conn, $_POST['nisn'] ?? '');
-		$nik = mysqli_real_escape_string($conn, $_POST['nik']);
 		$nama_lengkap = mysqli_real_escape_string($conn, $_POST['nama_lengkap']);
-		$no_telp = mysqli_real_escape_string($conn, $_POST['no_telp']);
+		$no_telepon = mysqli_real_escape_string($conn, $_POST['no_telp']);
 		$tanggal_lahir = mysqli_real_escape_string($conn, $_POST['tanggal_lahir']);
 		$asal_sekolah = mysqli_real_escape_string($conn, $_POST['asal_sekolah']);
-		$tgl_buat 			= date('Y-m-d H:i:s');
-		
-		$query = mysqli_query($conn, "INSERT INTO identitas_siswa SET NISN = '$nisn',
-																	  No_KK = '$no_kk',
-																	  NIK = '$nik',
-																	  Nama_Peserta_Didik = '$nama_lengkap',
-																	  no_telepon = '$no_telp',
-																	  Tanggal_Lahir = '$tanggal_lahir',
-																	  asal_sekolah = '$asal_sekolah',
-																	  status_administrasi = 0,
-																	  status_ortu = 0,
-																	  status_pendaftaran = 'Menunggu Verifikasi',
-																	  tgl_buat = '$tgl_buat' ");
-		if($query) {
+		$tgl_buat = date('Y-m-d H:i:s');
 
-			// session login
-			$_SESSION['nisnPeserta'] = $nisn; 
-			$_SESSION['namaPeserta'] = $nama_lengkap; 
+		$tahun = date('Y');
+		$query_last = mysqli_query($conn, "SELECT MAX(CAST(SUBSTRING(Id_Identitas_Siswa, 5) AS UNSIGNED)) as max_id FROM identitas_siswa WHERE SUBSTRING(Id_Identitas_Siswa, 1, 4) = '$tahun'");
+		$row_last = mysqli_fetch_assoc($query_last);
+		$next_id = ($row_last['max_id'] ?? 0) + 1;
+		$id_siswa = $tahun . str_pad($next_id, 4, '0', STR_PAD_LEFT);
+
+		$query = mysqli_query($conn, "INSERT INTO identitas_siswa SET 
+										Id_Identitas_Siswa = '$id_siswa',
+										Nama_Peserta_Didik = '$nama_lengkap',
+										no_telepon = '$no_telepon',
+										Tanggal_Lahir = '$tanggal_lahir',
+										asal_sekolah = '$asal_sekolah',
+										status_pendaftaran = 'Menunggu Verifikasi',
+										status_ortu = 0,
+										status_administrasi = 0,
+										tgl_buat = '$tgl_buat'");
+		if ($query) {
+			$_SESSION['noTelpPeserta'] = $no_telepon;
+			$_SESSION['namaPeserta'] = $nama_lengkap;
 			$_SESSION['tlPeserta'] = $tanggal_lahir;
-			$_SESSION['status_administrasi'] = 0;
-			$_SESSION['status_ortu'] = 0;
+			$_SESSION['status_pembayaran'] = 'Belum Lunas';
 
-		$_SESSION['alert'] = '<div class="alert alert-success alert-has-icon" id="alert">
-			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
-			                        <div class="alert-body">
-			                          <button class="close" data-dismiss="alert">
-			                            <span>×</span>
-			                          </button>
-			                          <div class="alert-title">Berhasil</div>
-			                          Data berhasil ditambahkan.
-			                        </div>
-			                      </div>';
-			header('Location: ../../view/halaman/dashboard.php');
+			$_SESSION['alert'] = '<div class="alert alert-success alert-has-icon">
+				<div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+				<div class="alert-body">
+				<button class="close" data-dismiss="alert"><span>×</span></button>
+				<div class="alert-title">Berhasil</div>
+				Pendaftaran berhasil! ID Anda: ' . $id_siswa . '. Silakan lanjutkan ke pembayaran.
+				</div>
+			</div>';
+			header('Location: ../../view/halaman/daftarSiswa.php');
 		} else {
-			$_SESSION['alert'] = '<div class="alert alert-danger alert-has-icon" id="alert">
-			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
-			                        <div class="alert-body">
-			                          <button class="close" data-dismiss="alert">
-			                            <span>×</span>
-			                          </button>
-			                          <div class="alert-title">Gagal</div>
-			                          Data gagal ditambahkan.
-			                        </div>
-			                      </div>';
-			header('Location: ../../view/halaman/dashboard.php');
+			$_SESSION['alert'] = '<div class="alert alert-danger alert-has-icon">
+				<div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+				<div class="alert-body">
+				<button class="close" data-dismiss="alert"><span>×</span></button>
+				<div class="alert-title">Gagal</div>
+				Pendaftaran gagal: ' . mysqli_error($conn) . '
+				</div>
+			</div>';
+			header('Location: ../../view/siswa/daftar.php');
 		}
 	}
 
@@ -125,6 +174,25 @@
 		$tinggal_bersama = mysqli_real_escape_string($conn, $_POST['tinggal_bersama'] ?? '');
 		$transport = mysqli_real_escape_string($conn, $_POST['transport'] ?? '');
 		$tgl_ubah = date('Y-m-d H:i:s');
+
+		$dokumen_list = [
+			'kk' => 'KK',
+			'akte_kelahiran' => 'Akte Kelahiran',
+			'kartu_nisn' => 'Kartu NISN',
+			'ijazah' => 'Ijazah',
+			'ktp_orang_tua' => 'KTP Orang Tua',
+			'pas_foto' => 'Pas Foto'
+		];
+
+		$upload_errors = [];
+		foreach ($dokumen_list as $field => $nama_dokumen) {
+			if (isset($_FILES[$field]) && $_FILES[$field]['size'] > 0) {
+				$result = uploadFile($field, $id, $nama_dokumen, $conn);
+				if (!$result['status']) {
+					$upload_errors[] = "$nama_dokumen: " . $result['message'];
+				}
+			}
+		}
 
 		$jurusan_pilihan_baru = mysqli_real_escape_string($conn, $_POST['jurusan_pilihan'] ?? '');
 		
@@ -208,6 +276,46 @@
 																 Transport = '$transport',
 																 tgl_ubah = '$tgl_ubah'
 									  					WHERE Id_Identitas_Siswa = '$id' ") or die(mysqli_error($conn));
+
+		if (isset($_POST['semester']) && is_array($_POST['semester'])) {
+			$id_siswa = $_POST['id'];
+			$semesters = $_POST['semester'];
+			$mata_pelajarans = $_POST['mata_pelajaran'];
+			$nilais = $_POST['nilai'];
+
+			for ($i = 0; $i < count($semesters); $i++) {
+				if (!empty($semesters[$i]) && !empty($mata_pelajarans[$i]) && !empty($nilais[$i])) {
+					$semester = mysqli_real_escape_string($conn, $semesters[$i]);
+					$mata_pelajaran = mysqli_real_escape_string($conn, $mata_pelajarans[$i]);
+					$nilai = (int)$nilais[$i];
+
+					// Cek apakah sudah ada data dengan semester dan mata pelajaran yang sama
+					$cek_query = mysqli_query($conn, "SELECT id_nilai FROM nilai_rapor 
+													WHERE id_siswa = '$id_siswa' 
+													AND semester = '$semester' 
+													AND mata_pelajaran = '$mata_pelajaran'");
+
+					if (mysqli_num_rows($cek_query) > 0) {
+						// Update jika sudah ada
+						$result = mysqli_query($conn, "UPDATE nilai_rapor 
+													SET nilai = '$nilai', 
+														tgl_input = NOW()
+													WHERE id_siswa = '$id_siswa' 
+													AND semester = '$semester' 
+													AND mata_pelajaran = '$mata_pelajaran'");
+					} else {
+						// Insert jika belum ada
+						$result = mysqli_query($conn, "INSERT INTO nilai_rapor 
+													(id_siswa, mata_pelajaran, semester, nilai, tgl_input)
+													VALUES ('$id_siswa', '$mata_pelajaran', '$semester', '$nilai', NOW())");
+					}
+
+					if (!$result) {
+						error_log("Error saving nilai_rapor: " . mysqli_error($conn));
+					}
+				}
+			}
+		}
 
 		if($query) {
 			$_SESSION['alert'] = '<div class="alert alert-success alert-has-icon" id="alert">
@@ -448,32 +556,30 @@
 
 	// Login Peserta
 	if (isset($_POST['loginDataPeserta'])) {
-		$nisn 			= mysqli_real_escape_string($conn, $_POST['nisn']); 
-		$tanggal_lahir 	= mysqli_real_escape_string($conn, $_POST['tanggal_lahir']);
+		$no_telepon = mysqli_real_escape_string($conn, $_POST['no_telepon']);
+		$tanggal_lahir = mysqli_real_escape_string($conn, $_POST['tanggal_lahir']);
 
-		$query = mysqli_query($conn, "SELECT * FROM identitas_siswa WHERE NISN = '$nisn' AND Tanggal_Lahir = '$tanggal_lahir'") or die(mysqli_error($conn));
+		$query = mysqli_query($conn, "SELECT * FROM identitas_siswa WHERE no_telepon = '$no_telepon' AND Tanggal_Lahir = '$tanggal_lahir'");
 
-		if(mysqli_num_rows($query) > 0) {
-			foreach ($query as $row) {
-				$_SESSION['nisnPeserta'] = $nisn; 
-				$_SESSION['namaPeserta'] = $row['Nama_Peserta_Didik']; 
-				$_SESSION['tlPeserta'] = $tanggal_lahir; 
-				$_SESSION['status_ortu'] = $row['status_ortu'];
-				$_SESSION['status_administrasi'] = $row['status_administrasi'];
-				$_SESSION['jurusan_pilihan'] = $row['jurusan_pilihan'];
-				header('Location: ../../view/halaman/dashboard.php');
-			}
+		if (mysqli_num_rows($query) > 0) {
+			$row = mysqli_fetch_assoc($query);
+			$_SESSION['noTelpPeserta'] = $no_telepon;
+			$_SESSION['namaPeserta'] = $row['Nama_Peserta_Didik'];
+			$_SESSION['tlPeserta'] = $tanggal_lahir;
+			$_SESSION['idPeserta'] = $row['Id_Identitas_Siswa'];
+			$_SESSION['status_ortu'] = $row['status_ortu'];
+			$_SESSION['status_administrasi'] = $row['status_administrasi'];
+
+			header('Location: ../../view/halaman/dashboard.php');
 		} else {
-			$_SESSION['alert'] = '<div class="alert alert-danger alert-has-icon" id="alert">
-			                        <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
-			                        <div class="alert-body">
-			                          <button class="close" data-dismiss="alert">
-			                            <span>×</span>
-			                          </button>
-			                          <div class="alert-title">Login Gagal</div>
-			                          NISN dan Tanggal Lahir anda tidak cocok.
-			                        </div>
-			                      </div>';
+			$_SESSION['alert'] = '<div class="alert alert-danger alert-has-icon">
+				<div class="alert-icon"><i class="far fa-lightbulb"></i></div>
+				<div class="alert-body">
+				<button class="close" data-dismiss="alert"><span>×</span></button>
+				<div class="alert-title">Login Gagal</div>
+				Nomor Telepon dan Tanggal Lahir tidak cocok.
+				</div>
+			</div>';
 			header('Location: ../../view/halaman/login.php');
 		}
 	}
@@ -481,7 +587,7 @@
 
 	// Logout
 	if (isset($_GET['logout'])) {
-		unset($_SESSION['nisnPeserta'], $_SESSION['namaPeserta'], $_SESSION['tlPeserta'], $_SESSION['status_ortu']);
+		unset($_SESSION['noTelpPeserta'], $_SESSION['namaPeserta'], $_SESSION['tlPeserta'], $_SESSION['status_ortu'], $_SESSION['status_pembayaran']);
 		header('Location: ../../view/halaman');
 	}
 ?>

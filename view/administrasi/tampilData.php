@@ -29,7 +29,7 @@ include('../../config/connection.php');
               <table class="table table-striped" id="table-1">
                 <thead>
                   <tr>
-                    <th class="text-center">#</th>
+                    <th class="text-center">ID Siswa</th>
                     <th>NISN</th>
                     <th>Nama</th>
                     <th>Harga</th>
@@ -59,7 +59,7 @@ include('../../config/connection.php');
                   foreach ($data as $row) {
                     ?>
                     <tr>
-                      <td><?= $no++; ?></td>
+                      <td><?= $row['Id_Identitas_Siswa']; ?></td>
                       <td><?= $row['NISN']; ?></td>
                       <td><?= $row['Nama_Peserta_Didik']; ?></td>
                       <td><?= $row['harga'] ? number_format($row['harga']) : '-'; ?></td>
@@ -72,19 +72,17 @@ include('../../config/connection.php');
                       </td>
                       <td><?= $row['tgl_ubah'] ?? '-'; ?></td>
                       <td class="text-center">
-                        <td class="text-center">
-                          <?php
-                          $isLunas = ($row['status'] == 'Lunas');
-                          $btnClass = $isLunas ? 'btn-danger' : 'btn-success';
-                          $btnText = $isLunas ? '<i class="fas fa-times"></i> Batalkan Lunas' : '<i class="fas fa-check"></i> Tandai Lunas';
-                          ?>
-                          <form method="POST" action="../../controller/admin/administrasi.php" style="display:inline;">
-                            <input type="hidden" name="toggleLunas" value="1">
-                            <input type="hidden" name="id_administrasi" value="<?= $row['id_administrasi']; ?>">
-                            <input type="hidden" name="id_identitas_siswa" value="<?= $row['Id_Identitas_Siswa']; ?>">
-                            <button type="submit" class="btn <?= $btnClass ?> btn-sm"><?= $btnText ?></button>
-                          </form>
-                        </td>
+                        <?php
+                        $isLunas = ($row['status'] == 'Lunas');
+                        $btnClass = $isLunas ? 'btn-danger' : 'btn-success';
+                        $btnText = $isLunas ? '<i class="fas fa-times"></i> Batalkan Lunas' : '<i class="fas fa-check"></i> Tandai Lunas';
+                        ?>
+                        <form method="POST" action="../../controller/admin/administrasi.php" style="display:inline;">
+                          <input type="hidden" name="toggleLunas" value="1">
+                          <input type="hidden" name="id_administrasi" value="<?= $row['id_administrasi']; ?>">
+                          <input type="hidden" name="id_identitas_siswa" value="<?= $row['Id_Identitas_Siswa']; ?>">
+                          <button type="submit" class="btn <?= $btnClass ?> btn-sm"><?= $btnText ?></button>
+                        </form>
                       </td>
                     </tr>
 
